@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="108" height="108" viewBox="0 0 108 108">
+  <defs>
+    <clipPath id="windowClip">
+      <rect x="23.0" y="27.0" width="62.0" height="54.0" rx="18.0"/>
+    </clipPath>
+  </defs>
+  <g fill="#000000">
+    <rect x="23.0" y="27.0" width="62.0" height="54.0" rx="18.0" fill="none"
+          stroke="#000000" stroke-width="2.6"/>
+    <rect x="30.5" y="48.0" width="47.0" height="13.5" rx="6.75"/>
+    <circle cx="54.00" cy="61.00" r="5.88"/>
+  </g>
+  <g transform="translate(43.839 52.194) scale(0.1882)">
+    <path d="M54,28 C48,28 44,30 42,34 C34,40 29,49 29,59 C29,73 40,84 54,84 C68,84 79,73 79,59 C79,49 74,40 66,34 C64,30 60,28 54,28 Z"/>
+  </g>
+</svg>

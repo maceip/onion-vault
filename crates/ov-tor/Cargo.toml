@@ -1,0 +1,41 @@
+[package]
+name = "ov-tor"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Embedded Arti Tor client with a local SOCKS5 listener and per-hidden-service circuit isolation"
+
+[dependencies]
+anyhow = { workspace = true }
+log = { workspace = true }
+thiserror = { workspace = true }
+futures-util = { workspace = true }
+tokio = { workspace = true, features = [
+    "rt-multi-thread",
+    "macros",
+    "net",
+    "io-util",
+    "sync",
+    "time",
+] }
+arti-client = { workspace = true }
+tor-rtcompat = { workspace = true }
+# The Arti client uses rustls.  rustls itself has no cryptography provider:
+# without one it panics as soon as a client is created, so the provider is
+# part of the dependencies of this crate and is installed before the first
+# client is built (see `install_crypto_provider`).
+rustls = { workspace = true }
+
+[dev-dependencies]
+# The onion service of the end to end test is published with the Arti onion
+# service API.  The feature is only needed by the tests, so the production
+# build of the crate does not contain the onion service code.
+arti-client = { version = "0.47", default-features = false, features = [
+    "tokio",
+    "rustls",
+    "onion-service-client",
+    "onion-service-service",
+    "compression",
+] }
+tor-hsservice = "0.47"

@@ -1,0 +1,342 @@
+# OnionVault — continuous integration and release pipeline.
+#
+# Every push to *any* branch (and every manual run) executes the whole
+# pipeline:
+#
+#   1. `rust-tests`    — fmt, clippy, check and test the Rust workspace,
+#   2. `android-build` — Compose preview smoke test and debug APK assembly,
+#   3. `release`       — publishes a *new* tagged GitHub Release with the APK.
+#
+# The CEF (Chromium Embedded Framework) *Android* binary distribution is not
+# publicly available, so CI can neither download nor link it.  The vendored
+# build scripts understand `ONIONVAULT_CEF_CHECK_ONLY=1`: with that flag the
+# CEF link step and the CEF resource packaging are skipped, while everything
+# else is still type-checked, unit-tested and assembled into an APK.  The flag
+# is therefore set for the whole pipeline and the CI never fails merely
+# because the CEF distribution is missing.
+#
+# For the same reason the native Rust library is not cross-compiled in CI:
+# `ONIONVAULT_SKIP_CARGO=1` turns the Gradle `cargoBuild` task into a no-op
+# (see `android/app/build.gradle.kts`), because that library has to be linked
+# against `libcef.so`, which does not exist here.  The APK is therefore
+# assembled without the CEF dependent native library.
+
+name: CI & Release
+
+on:
+  # Any branch, any push.  A release is published for every one of them.
+  - push
+  - workflow_dispatch
+
+permissions:
+  # The release job needs to create tags and GitHub Releases.
+  contents: write
+  actions: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  rust-tests:
+    name: Rust checks and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      actions: read
+    env:
+      # The CEF Android distribution cannot be obtained in CI, so the CEF
+      # link/packaging step is switched off: the crates are still type-checked
+      # and unit-tested against the CEF bindings.
+      ONIONVAULT_CEF_CHECK_ONLY: "1"
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Install system build dependencies
+        # `rusqlite` is built with the `bundled` feature, i.e. SQLite is
+        # compiled from C source and needs a C compiler.  `pkg-config` is the
+        # conventional companion of the C/C++ build dependencies; `cmake` and
+        # `ninja` are the toolchain the CEF wrapper is built with (not
+        # exercised in check-only mode, but required if CEF is ever provided).
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            pkg-config \
+            cmake \
+            ninja-build
+
+      - name: Install the Rust toolchain
+        # Pinned to the stable channel, including the two components the
+        # pipeline needs: rustfmt (format check) and clippy (lints).
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache the Cargo registry, the Cargo git checkouts and the target directory
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            cargo-${{ runner.os }}-
+
+      - name: Check the formatting
+        run: cargo fmt --all -- --check
+
+      - name: Run Clippy
+        # Deliberately *without* `-D warnings`: the CI must never require a
+        # source change, it only reports the lints.
+        run: cargo clippy --workspace --all-targets
+
+      - name: Type-check the workspace
+        run: cargo check --workspace
+
+      - name: Run the workspace unit and integration tests
+        # `cargo test --workspace` covers the unit tests of the workspace and
+        # the integration tests in `crates/ov-pgp/tests` and
+        # `crates/ov-tor/tests` (and those of `crates/ov-cef`).
+        run: |
+          set -o pipefail
+          mkdir -p test-results
+          cargo test --workspace -- --nocapture 2>&1 | tee test-results/cargo-test.log
+
+      - name: Upload the test output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-test-output
+          path: test-results/
+          if-no-files-found: warn
+          retention-days: 14
+
+  android-build:
+    name: Android debug build and Compose preview test
+    runs-on: ubuntu-latest
+    needs: rust-tests
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: read
+    env:
+      # The native library of the APK has to be linked against `libcef.so`,
+      # which is not available in CI (see the header comment).  This flag makes
+      # the Gradle `cargoBuild` task skip the native step, so the APK can
+      # still be assembled.
+      ONIONVAULT_SKIP_CARGO: "1"
+      # The cross compilation of the Rust crates is checked against the real
+      # CEF bindings, without linking against the CEF runtime.
+      ONIONVAULT_CEF_CHECK_ONLY: "1"
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        # `setup-gradle` provides the Gradle caches (~/.gradle/caches, the
+        # wrapper distribution and the build cache) for the Gradle steps below.
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+          cache-dependency-path: |
+            android/**/*.gradle.kts
+            android/settings.gradle.kts
+            android/gradle/wrapper/gradle-wrapper.properties
+
+      - name: Set up the Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install the Android SDK packages
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0" "platform-tools"
+
+      - name: Install the Android NDK
+        # NDK r27c, the version the Gradle build declares as `ndkVersion`.
+        run: sdkmanager "ndk;27.2.12479018"
+
+      - name: Accept the Android SDK licenses
+        run: |
+          # `yes` is killed by SIGPIPE as soon as sdkmanager exits, so the
+          # pipeline is evaluated without `pipefail` here: only the exit code
+          # of `sdkmanager` matters.
+          set +o pipefail
+          yes | sdkmanager --licenses > /dev/null
+
+      - name: Export the Android NDK location
+        run: |
+          echo "ANDROID_NDK_HOME=${ANDROID_SDK_ROOT}/ndk/27.2.12479018" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_ROOT=${ANDROID_SDK_ROOT}/ndk/27.2.12479018" >> "$GITHUB_ENV"
+
+      - name: Prepare the Gradle wrapper
+        run: chmod +x android/gradlew
+
+      - name: Install the Rust toolchain and the Android target
+        # The toolchain is installed even though the native step is skipped
+        # above, so that the job also verifies that the cross compilation
+        # setup is complete.
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk --locked
+
+      - name: Cache the Cargo registry, the Cargo git checkouts and the target directories
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+            .cargo-target
+          key: cargo-android-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            cargo-android-${{ runner.os }}-
+
+      - name: Cross-compile the Rust crates for Android
+        # The crates are type-checked for `aarch64-linux-android` with the
+        # NDK toolchain of the job; the CEF runtime is not linked (see
+        # `ONIONVAULT_CEF_CHECK_ONLY`).
+        run: |
+          set -o pipefail
+          mkdir -p test-results
+          cargo check --workspace --target aarch64-linux-android 2>&1 | tee test-results/cargo-android-check.log
+
+      - name: Run the Compose preview smoke test
+        working-directory: android
+        run: ./gradlew :app:testDebugUnitTest --tests 'dev.onionvault.OnionVaultPreviewsTest' --stacktrace
+
+      - name: Assemble the debug APK
+        # `ONIONVAULT_SKIP_CARGO=1` (job environment) skips the native Rust
+        # build, so no CEF distribution is needed for the APK.
+        working-directory: android
+        run: ./gradlew :app:assembleDebug --stacktrace
+
+      - name: Upload the debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: onionvault-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload the Android unit test reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-unit-test-reports
+          path: |
+            android/app/build/reports/tests/testDebugUnitTest/
+            android/app/build/test-results/testDebugUnitTest/
+          if-no-files-found: warn
+          retention-days: 14
+
+  release:
+    name: Publish the tagged GitHub release
+    runs-on: ubuntu-latest
+    needs: [rust-tests, android-build]
+    timeout-minutes: 15
+    permissions:
+      # Creating a release means creating a tag and a release object.
+      contents: write
+      actions: read
+    env:
+      # A new tag for every push.  A re-run of the same push reuses the tag
+      # of that run and updates the existing release instead of failing.
+      RELEASE_TAG: build-${{ github.run_number }}-${{ github.sha }}
+    steps:
+      - name: Download the debug APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: onionvault-debug-apk
+          path: dist
+
+      - name: Compute the SHA-256 checksum of the APK
+        id: apk
+        run: |
+          set -euo pipefail
+          apk_path="$(find dist -type f -name '*.apk' -print -quit)"
+          if [ -z "${apk_path}" ]; then
+            echo "::error::No APK found in the onionvault-debug-apk artifact"
+            exit 1
+          fi
+          sha256="$(sha256sum "${apk_path}" | cut -d' ' -f1)"
+          echo "path=${apk_path}" >> "$GITHUB_OUTPUT"
+          echo "sha256=${sha256}" >> "$GITHUB_OUTPUT"
+          echo "SHA-256 of ${apk_path}: ${sha256}"
+
+      - name: Create or update the tagged GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APK_PATH: ${{ steps.apk.outputs.path }}
+          APK_SHA256: ${{ steps.apk.outputs.sha256 }}
+        run: |
+          set -euo pipefail
+
+          title="OnionVault debug build ${GITHUB_RUN_NUMBER} (${GITHUB_SHA:0:7})"
+
+          if gh release view "${RELEASE_TAG}" --repo "${GITHUB_REPOSITORY}" > /dev/null 2>&1; then
+            # The tag already exists: this is a re-run of the same push.  The
+            # release is updated instead of failing.
+            echo "Release ${RELEASE_TAG} already exists — updating it in place."
+            gh release upload "${RELEASE_TAG}" "${APK_PATH}" --repo "${GITHUB_REPOSITORY}" --clobber
+          else
+            echo "Creating the new release ${RELEASE_TAG} at commit ${GITHUB_SHA}."
+            gh release create "${RELEASE_TAG}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --target "${GITHUB_SHA}" \
+              --title "${title}" \
+              --generate-notes \
+              --latest \
+              --prerelease=false \
+              "${APK_PATH}"
+          fi
+
+          # Start from the auto-generated changelog and append the build
+          # information.  Everything from the marker on is replaced, so an
+          # update never duplicates the block.
+          gh release view "${RELEASE_TAG}" --repo "${GITHUB_REPOSITORY}" --json body --jq .body > release-body.md
+          awk '/^<!-- onionvault-build-info -->$/ { exit } { print }' release-body.md > release-body.trimmed.md
+          mv release-body.trimmed.md release-body.md
+          {
+            echo
+            echo "<!-- onionvault-build-info -->"
+            echo "### Build information"
+            echo
+            echo "| item | value |"
+            echo "| --- | --- |"
+            echo "| commit | \`${GITHUB_SHA}\` |"
+            echo "| workflow run | ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID} |"
+            echo "| SHA-256 (\`app-debug.apk\`) | \`${APK_SHA256}\` |"
+          } >> release-body.md
+
+          gh release edit "${RELEASE_TAG}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "${title}" \
+            --notes-file release-body.md \
+            --latest \
+            --prerelease=false
+
+      - name: Mark the release as latest and not as a prerelease
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          release_id="$(gh release view "${RELEASE_TAG}" --repo "${GITHUB_REPOSITORY}" --json databaseId --jq .databaseId)"
+          gh api --method PATCH "repos/${GITHUB_REPOSITORY}/releases/${release_id}" \
+            -F draft=false \
+            -F prerelease=false \
+            -f make_latest=true > /dev/null
+          echo "Release ${RELEASE_TAG} is published as a non-prerelease and marked as latest."

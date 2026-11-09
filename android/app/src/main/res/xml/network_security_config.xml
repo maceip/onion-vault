@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    OnionVault talks to the network through the Tor tunnel only.  The
+    platform must not open a cleartext connection on its own, and the
+    certificate pinning is left to the hidden services themselves.
+
+    A hidden service is reached over plain HTTP *inside* the Tor circuit:
+    the transport of the tunnel already encrypts the connection between the
+    device and the service, so the cleartext permission below does not open
+    a path around Tor.  Every other host keeps the default: cleartext is
+    refused.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">onion</domain>
+    </domain-config>
+</network-security-config>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The silhouette of the icon for the themed icons of Android 13 and later:
+    the platform tints this layer with the colours of the wallpaper.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M23.0,45.0 a18.0,18.0 0 0 1 18.0,-18.0 h26.0 a18.0,18.0 0 0 1 18.0,18.0 v18.0 a18.0,18.0 0 0 1 -18.0,18.0 h-26.0 a18.0,18.0 0 0 1 -18.0,-18.0 z"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="2.6"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M30.5,54.75 h47.0 a6.75,6.75 0 0 1 0,13.5 h-47.0 a6.75,6.75 0 0 1 0,-13.5 z"
+        android:fillColor="#FF000000" />
+    <path
+        android:pathData="M54.00,61.00 m-5.88,0 a5.88,5.88 0 1 1,11.76 0 a5.88,5.88 0 1 1,-11.76 0"
+        android:fillColor="#FF000000" />
+    <group
+        android:translateX="43.784"
+        android:translateY="52.108"
+        android:scaleX="0.1892"
+        android:scaleY="0.1892">
+        <path android:pathData="M54,28 C48,28 44,30 42,34 C34,40 29,49 29,59 C29,73 40,84 54,84 C68,84 79,73 79,59 C79,49 74,40 66,34 C64,30 60,28 54,28 Z" android:fillColor="#FF000000" />
+        <path android:pathData="M52.4,28.6 C49.6,21.6 52,13.4 58.4,9.6 C55.6,16 54.4,22.4 56.2,28.2 Z" android:fillColor="#FF000000" />
+    </group>
+</vector>

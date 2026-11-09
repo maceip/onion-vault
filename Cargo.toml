@@ -1,0 +1,108 @@
+[package]
+name = "onion-vault"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.82"
+license = "Apache-2.0 OR MIT"
+description = "OnionVault: a zero-JavaScript, Tor-routed mobile browser for Android with a hardware-backed native PGP key manager"
+publish = false
+build = "build.rs"
+
+[workspace]
+members = [
+    "crates/ov-core",
+    "crates/ov-cef",
+    "crates/ov-pgp",
+    "crates/ov-tor",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.82"
+license = "Apache-2.0 OR MIT"
+
+[workspace.dependencies]
+anyhow = "1"
+log = "0.4"
+thiserror = "2"
+tokio = { version = "1", default-features = false }
+futures-util = { version = "0.3", default-features = false, features = ["std"] }
+once_cell = "1"
+
+# Workspace members
+ov-core = { path = "crates/ov-core" }
+ov-cef = { path = "crates/ov-cef" }
+ov-pgp = { path = "crates/ov-pgp" }
+ov-tor = { path = "crates/ov-tor" }
+
+# Android
+jni = "0.21"
+ndk = { version = "0.9", features = ["nativewindow", "api-level-29"] }
+ndk-sys = "0.6"
+
+# Tor
+arti-client = { version = "0.47", default-features = false, features = [
+    "tokio",
+    "rustls",
+    "onion-service-client",
+    "compression",
+] }
+tor-rtcompat = { version = "0.47", default-features = false, features = ["tokio", "rustls"] }
+
+# Rustls with an explicit crypto provider.  The Arti client needs a process
+# wide provider, and "ring" is the one that also builds for the Android NDK.
+rustls = { version = "0.23", default-features = false, features = ["ring", "std"] }
+
+# PGP
+sequoia-openpgp = { version = "1.22", default-features = false, features = [
+    # The RustCrypto backend is pure Rust: it needs no OpenSSL, which keeps
+    # the cross compilation for the Android NDK simple.
+    "crypto-rust",
+    "allow-experimental-crypto",
+    # The RustCrypto backend does not provide constant time operations.
+    "allow-variable-time-crypto",
+] }
+rusqlite = { version = "0.37", features = ["bundled"] }
+aes-gcm = "0.10"
+rand_core = { version = "0.6", features = ["getrandom"] }
+getrandom = "0.3"
+base64 = "0.22"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+hex = "0.4"
+
+# CEF
+cef = { version = "156.4.0", default-features = false, features = ["resources"] }
+
+[patch.crates-io]
+# Upstream cef-rs has no `aarch64-linux-android` support: it ships per-target
+# bindings for desktop triples only and its build script downloads a desktop
+# CEF distribution.  `third_party/` holds the patched crates (Android binding
+# alias + an Android-aware build script) that make the OSR pipeline buildable
+# for the NDK target.
+cef = { path = "third_party/cef" }
+cef-dll-sys = { path = "third_party/cef-dll-sys" }
+
+[target.'cfg(target_os = "android")'.dependencies]
+jni = { workspace = true }
+
+[lib]
+name = "onion_vault"
+crate-type = ["cdylib", "rlib"]
+path = "src/lib.rs"
+
+[dependencies]
+ov-core = { path = "crates/ov-core" }
+ov-cef = { path = "crates/ov-cef" }
+ov-pgp = { path = "crates/ov-pgp" }
+ov-tor = { path = "crates/ov-tor" }
+log = { workspace = true }
+anyhow = { workspace = true }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = "symbols"

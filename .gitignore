@@ -1,0 +1,23 @@
+# Rust
+/target
+**/*.rs.bk
+Cargo.lock.orig
+
+# The target directory of the Android build
+.cargo-target/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+
+# The native libraries that cargo-ndk produces
+android/app/src/main/jniLibs/
+
+# The CEF resources (they come from the CEF distribution)
+android/app/src/main/assets/cef/*
+!android/app/src/main/assets/cef/README.md
+
+# Editors
+.idea/
+*.iml
+.vscode/

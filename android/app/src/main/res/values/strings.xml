@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">OnionVault</string>
+    <string name="address_hint">onion address</string>
+    <string name="go">Go</string>
+    <string name="starting">Starting the Tor client…</string>
+    <string name="tor_progress">Tor: %1$d%% (%2$s)</string>
+    <string name="blocked">The request was blocked by the leak protection.</string>
+    <string name="engine_failed">The browser engine could not be started.</string>
+    <string name="start_url">about:blank</string>
+
+    <string name="action_decrypt">Decrypt</string>
+    <string name="action_import_key">Import key</string>
+    <string name="action_encrypt">Encrypt</string>
+    <string name="action_field">Field</string>
+    <string name="no_message">The message is empty.</string>
+    <string name="no_key">The key is empty.</string>
+    <string name="unknown_field">This field cannot be used.</string>
+
+    <string name="signature_verified">The signature of the message is valid.</string>
+    <string name="signature_unverified">The signature of the message could not be verified.</string>
+    <string name="insert_into_page">Insert</string>
+    <string name="mutation_applied">The field carries the new text.</string>
+    <string name="mutation_failed">The field could not be changed: %1$s</string>
+    <string name="mutation_stale">the field still holds the old text</string>
+    <string name="authenticate_for_key">Confirm to use your private key</string>
+    <string name="authentication_failed">The confirmation failed; the key stays locked.</string>
+    <string name="close">Close</string>
+    <string name="cancel">Cancel</string>
+</resources>

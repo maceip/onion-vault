@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        OnionVault draws its own chrome; the platform theme only provides the
+        dark background and the correct status bar behaviour.
+    -->
+    <style name="Theme.OnionVault" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#FF0B0E11</item>
+        <item name="android:statusBarColor">#FF101418</item>
+        <item name="android:navigationBarColor">#FF101418</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

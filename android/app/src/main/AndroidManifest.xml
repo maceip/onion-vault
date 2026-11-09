@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    OnionVault manifest.
+
+    The CEF subprocesses (renderer, GPU and utility process) run in dedicated
+    Android services: Android does not allow a plain fork()/exec() of a helper
+    binary, the subprocess has to be started through the ActivityManager so
+    that the platform gives it a process with the right SELinux label.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- The Tor transport needs the network; nothing else does. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- The master wrapping key can demand a biometric confirmation. -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+
+    <application
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:enableOnBackInvokedCallback="true"
+        android:fullBackupContent="false"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.OnionVault"
+        android:usesCleartextTraffic="false">
+
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode|density"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--
+            The CEF subprocesses.  Every process type gets its own service so
+            that the ActivityManager starts it in a separate process; the
+            command line of the subprocess is passed through the intent
+            extras (see CefService.kt).
+        -->
+        <service
+            android:name=".CefRenderService"
+            android:exported="false"
+            android:process=":cef_render" />
+
+        <service
+            android:name=".CefGpuService"
+            android:exported="false"
+            android:process=":cef_gpu" />
+
+        <service
+            android:name=".CefUtilityService"
+            android:exported="false"
+            android:process=":cef_utility" />
+
+    </application>
+
+</manifest>

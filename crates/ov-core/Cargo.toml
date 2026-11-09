@@ -1,0 +1,24 @@
+[package]
+name = "ov-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "JNI entry point, Android event bridge and NDK surface renderer for OnionVault"
+
+[dependencies]
+ov-cef = { workspace = true }
+ov-tor = { workspace = true }
+ov-pgp = { workspace = true }
+cef = { workspace = true }
+anyhow = { workspace = true }
+log = { workspace = true }
+serde_json = { workspace = true }
+sequoia-openpgp = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "sync", "time"] }
+
+[target.'cfg(target_os = "android")'.dependencies]
+jni = { workspace = true }
+ndk = { workspace = true }
+ndk-sys = { workspace = true }
