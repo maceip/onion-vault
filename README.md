@@ -343,6 +343,11 @@ gradle :app:testDebugUnitTest --tests 'dev.onionvault.OnionVaultPreviewsTest'
 The tags of the releases are unique (`build-<run number>-<commit>`), so that a
 release never overwrites the artefact of an earlier build.
 
+`.github/workflows/live-tor.yml` runs every night the two tests of the suite
+that need the live Tor network: the bootstrap of the client and the tunnel to
+a real onion service. They are marked with `#[ignore]`, so the hermetic suite
+of every push stays offline and fast.
+
 ## Verification status
 
 The sources were verified in the following way:
@@ -359,7 +364,9 @@ The sources were verified in the following way:
 * `gradle :app:testDebugUnitTest --tests 'dev.onionvault.OnionVaultPreviewsTest'`
   — the four previews render on the JVM,
 * `cargo test -p ov-tor -- --ignored` — the embedded Arti client bootstraps
-  against the live Tor network and exposes its SOCKS5 listener,
+  against the live Tor network and exposes its SOCKS5 listener, and the
+  client publishes a real onion service and reads the compose page of that
+  service back through a real circuit,
 * `cargo ndk -t arm64-v8a --platform 29 build --release` — the native library
   is linked against the real `libcef.so` of the CEF Android distribution,
 * `gradle assembleDebug` — produces an installable APK (`dev.onionvault`,

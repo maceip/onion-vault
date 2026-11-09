@@ -728,6 +728,11 @@ async fn serve_onion_service(mut stream: DataStream, body: String) {
 ///
 /// This is what the browser does: it asks for a hidden service, the front
 /// end puts the request on a circuit and the service answers.
+///
+/// The client of the test prints a panic of a background worker when the
+/// runtime of the test is shut down ("A Tokio 1.x context was found, but it
+/// is being shutdown"); the worker is a timer of the Arti client that is
+/// cancelled by the shutdown of the runtime and the test itself passes.
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 #[ignore = "requires a live Tor network"]
 async fn the_client_tunnels_to_a_real_onion_service() -> anyhow::Result<()> {
