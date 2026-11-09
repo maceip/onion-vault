@@ -98,7 +98,7 @@ fn parse_cert(armored: &str) -> anyhow::Result<Cert> {
         armor::Reader::from_bytes(armored.as_bytes(), armor::ReaderMode::Tolerant(None));
     let mut binary = Vec::new();
     std::io::Read::read_to_end(&mut reader, &mut binary)?;
-    Ok(Cert::from_bytes(&binary)?)
+    Cert::from_bytes(&binary)
 }
 
 /// `true` when `needle` occurs in `haystack`.

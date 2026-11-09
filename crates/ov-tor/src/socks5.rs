@@ -140,7 +140,9 @@ pub fn parse_request(bytes: &[u8]) -> Result<Socks5Request, Socks5Error> {
                 return Err(Socks5Error::Truncated);
             }
             let len = bytes[4];
-            if len == 0 || len > MAX_DOMAIN_LEN {
+            // The length of a domain name is a single byte, so it can never
+            // be longer than 255 characters; only the empty name is invalid.
+            if len == 0 {
                 return Err(Socks5Error::InvalidDomainLength(len));
             }
             let end = 5 + len as usize;
@@ -474,7 +476,7 @@ async fn read_request(stream: &mut TcpStream) -> anyhow::Result<Option<Socks5Req
         ATYP_DOMAIN => {
             let mut len = [0u8; 1];
             stream.read_exact(&mut len).await?;
-            if len[0] == 0 || len[0] > MAX_DOMAIN_LEN {
+            if len[0] == 0 {
                 anyhow::bail!("invalid domain length {}", len[0]);
             }
             let mut name = vec![0u8; len[0] as usize];

@@ -36,6 +36,11 @@ arti-client = { version = "0.47", default-features = false, features = [
     "rustls",
     "onion-service-client",
     "onion-service-service",
+    "hs-pow-full",
     "compression",
 ] }
 tor-hsservice = "0.47"
+# The relay cell that the hidden service answers a request with.
+tor-cell = "0.47"
+# The onion address of a hidden service is only displayed unredacted.
+safelog = "0.10"

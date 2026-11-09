@@ -182,17 +182,21 @@ mod tests {
     #[tokio::test]
     async fn the_listener_binds_to_loopback_only() {
         install_crypto_provider();
-        let mut config = TorConfig::default();
-        config.state_dir = std::env::temp_dir().join("ov-tor-test-state");
-        config.cache_dir = std::env::temp_dir().join("ov-tor-test-cache");
+        let config = TorConfig {
+            state_dir: std::env::temp_dir().join("ov-tor-test-state"),
+            cache_dir: std::env::temp_dir().join("ov-tor-test-cache"),
+            ..TorConfig::default()
+        };
         config.validate().unwrap();
         assert!(config.socks_bind.ip().is_loopback());
     }
 
     #[test]
     fn a_public_bind_address_is_rejected() {
-        let mut config = TorConfig::default();
-        config.socks_bind = "0.0.0.0:9050".parse().unwrap();
+        let config = TorConfig {
+            socks_bind: "0.0.0.0:9050".parse().unwrap(),
+            ..TorConfig::default()
+        };
         assert!(config.validate().is_err());
     }
 }

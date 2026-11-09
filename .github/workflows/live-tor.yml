@@ -1,0 +1,71 @@
+# OnionVault — the tests that need a live Tor network.
+#
+# The hermetic test suite runs on every push (see `ci-release.yml`).  The
+# tests in this workflow start a real Arti client, bootstrap it against the
+# Tor network and open a tunnel to a hidden service, so they are far too
+# slow and far too flaky for the pull request pipeline: they run on a
+# schedule instead, and they can be started by hand.
+#
+# The suite is *not* allowed to fail silently: a failure of the live
+# bootstrap is a real problem with the transport, not a flaky test.
+
+name: Live Tor
+
+on:
+  schedule:
+    # Every night at 03:17 UTC.
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  ONIONVAULT_CEF_CHECK_ONLY: "1"
+
+jobs:
+  live-tor:
+    name: Bootstrap against the Tor network
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Install the Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache the Cargo registry and the target directory
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+          key: cargo-live-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            cargo-live-${{ runner.os }}-
+
+      - name: Run the tests that need a live Tor network
+        # The tests are ignored by default; `--ignored` runs them.  They
+        # open a real circuit to a hidden service, so the runner needs
+        # outbound TCP to the directory authorities and to the relays.
+        run: |
+          set -o pipefail
+          mkdir -p test-results
+          cargo test -p ov-tor --test tor_integration -- --ignored --nocapture 2>&1 \
+            | tee test-results/live-tor.log
+
+      - name: Upload the test output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-tor-output
+          path: test-results/
+          if-no-files-found: warn
+          retention-days: 14

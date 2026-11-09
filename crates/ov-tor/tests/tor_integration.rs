@@ -20,6 +20,7 @@
 use std::{
     io::{Read, Write},
     net::{Ipv4Addr, SocketAddr, TcpListener, TcpStream},
+    os::unix::fs::PermissionsExt,
     path::Path,
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -29,7 +30,8 @@ use std::{
 };
 
 use anyhow::Context;
-use arti_client::{BootstrapBehavior, TorClient};
+use arti_client::{BootstrapBehavior, DataStream, TorClient};
+use futures_util::StreamExt;
 use ov_tor::{
     isolation::apex_domain,
     socks5::{
@@ -39,11 +41,14 @@ use ov_tor::{
     },
     IsolationRegistry, Socks5Server, TorConfig, TorService,
 };
+use safelog::DisplayRedacted;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::TcpStream as AsyncTcpStream,
     time::Instant,
 };
+use tor_cell::relaycell::msg::Connected;
+use tor_hsservice::{config::OnionServiceConfigBuilder, HsNickname};
 use tor_rtcompat::PreferredRuntime;
 
 /// "No authentication required", RFC 1928.
@@ -284,6 +289,21 @@ impl Socks5Client {
         answer
     }
 
+    /// Send a request over the tunnel and read the whole answer.
+    async fn exchange(&mut self, request: &[u8]) -> String {
+        self.stream
+            .write_all(request)
+            .await
+            .expect("cannot send the request over the tunnel");
+        self.stream.flush().await.expect("cannot flush the tunnel");
+        let mut answer = Vec::new();
+        self.stream
+            .read_to_end(&mut answer)
+            .await
+            .expect("cannot read the answer of the tunnel");
+        String::from_utf8_lossy(&answer).into_owned()
+    }
+
     /// Send a request and read the reply of the front end.
     async fn request(&mut self, request: &[u8]) -> [u8; 10] {
         self.stream
@@ -298,6 +318,16 @@ impl Socks5Client {
             .expect("cannot read the reply");
         reply
     }
+}
+
+/// Create a directory that only its owner can see.
+///
+/// The Arti client refuses a state directory that the other users of the
+/// machine can read: the directory holds the keys of the hidden services.
+fn private_dir(path: &Path) {
+    std::fs::create_dir_all(path).expect("cannot create the directory");
+    std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o700))
+        .expect("cannot restrict the permissions of the directory");
 }
 
 /// Install the rustls crypto provider that the Arti client needs.
@@ -321,11 +351,16 @@ async fn start_front_end(
 ) -> anyhow::Result<(Arc<Socks5Server>, Arc<IsolationRegistry>)> {
     install_crypto_provider();
 
-    let mut config = TorConfig::default();
-    config.state_dir = state_dir.to_path_buf();
-    config.cache_dir = cache_dir.to_path_buf();
-    config.allow_clearnet = allow_clearnet;
-    config.connect_timeout = Duration::from_secs(30);
+    private_dir(state_dir);
+    private_dir(cache_dir);
+
+    let config = TorConfig {
+        state_dir: state_dir.to_path_buf(),
+        cache_dir: cache_dir.to_path_buf(),
+        allow_clearnet,
+        connect_timeout: Duration::from_secs(30),
+        ..TorConfig::default()
+    };
     config.validate()?;
 
     let tor_config = config.build_tor_config()?;
@@ -628,12 +663,17 @@ async fn the_live_client_boots_and_exposes_a_loopback_socks_endpoint() -> anyhow
     install_crypto_provider();
 
     let dir = TempDir::new("live");
-    let mut config = TorConfig::default();
-    config.state_dir = dir.path().join("state");
-    config.cache_dir = dir.path().join("cache");
-    config.socks_bind = "127.0.0.1:0".parse()?;
-    config.allow_clearnet = false;
-    config.connect_timeout = Duration::from_secs(120);
+    private_dir(&dir.path().join("state"));
+    private_dir(&dir.path().join("cache"));
+
+    let config = TorConfig {
+        state_dir: dir.path().join("state"),
+        cache_dir: dir.path().join("cache"),
+        socks_bind: "127.0.0.1:0".parse()?,
+        allow_clearnet: false,
+        connect_timeout: Duration::from_secs(120),
+        ..TorConfig::default()
+    };
 
     let service = TorService::start(config).await?;
 
@@ -662,5 +702,137 @@ async fn the_live_client_boots_and_exposes_a_loopback_socks_endpoint() -> anyhow
 
     service.shutdown();
 
+    Ok(())
+}
+
+/// Answer the request of a hidden service with the compose page.
+async fn serve_onion_service(mut stream: DataStream, body: String) {
+    let mut request = [0u8; 2048];
+    let _ = stream.read(&mut request).await;
+    let response = format!(
+        "HTTP/1.1 200 OK\r\n\
+         Content-Type: text/html; charset=utf-8\r\n\
+         Content-Length: {}\r\n\
+         Connection: close\r\n\
+         \r\n\
+         {body}",
+        body.len()
+    );
+    let _ = stream.write_all(response.as_bytes()).await;
+    let _ = stream.flush().await;
+}
+
+/// The end to end proof of the transport: the client publishes a hidden
+/// service, the SOCKS5 front end opens a tunnel to it and the compose page
+/// of the hidden service comes back through the tunnel.
+///
+/// This is what the browser does: it asks for a hidden service, the front
+/// end puts the request on a circuit and the service answers.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+#[ignore = "requires a live Tor network"]
+async fn the_client_tunnels_to_a_real_onion_service() -> anyhow::Result<()> {
+    let dir = TempDir::new("onion-service");
+    private_dir(&dir.path().join("state"));
+    private_dir(&dir.path().join("cache"));
+
+    let config = TorConfig {
+        state_dir: dir.path().join("state"),
+        cache_dir: dir.path().join("cache"),
+        socks_bind: "127.0.0.1:0".parse()?,
+        allow_clearnet: false,
+        ..TorConfig::default()
+    };
+
+    let service = TorService::start(config).await?;
+    let endpoint = service.socks_endpoint();
+
+    // Wait for the bootstrap of the client.
+    let deadline = Instant::now() + Duration::from_secs(300);
+    while !service.is_ready() {
+        anyhow::ensure!(
+            Instant::now() < deadline,
+            "the Tor client did not bootstrap in time"
+        );
+        tokio::time::sleep(Duration::from_secs(1)).await;
+    }
+
+    // The hidden service is published by the same client, so the test needs
+    // only one directory cache.
+    let service_config = OnionServiceConfigBuilder::default()
+        .nickname(HsNickname::new("onionvault-test".to_string())?)
+        .build()?;
+    let (running, requests) = service
+        .client()
+        .launch_onion_service(service_config)?
+        .context("the onion service must be enabled")?;
+    let address = running
+        .onion_address()
+        .context("the onion service must have an address")?;
+    let host = address.display_unredacted().to_string();
+
+    // Answer the requests of the hidden service with the compose page.
+    tokio::spawn(async move {
+        let mut requests = Box::pin(requests);
+        while let Some(request) = requests.next().await {
+            let mut streams = match request.accept().await {
+                Ok(streams) => streams,
+                Err(err) => {
+                    log::warn!("cannot accept the request of the hidden service: {err}");
+                    continue;
+                }
+            };
+            while let Some(stream_request) = streams.next().await {
+                let stream = match stream_request.accept(Connected::new_empty()).await {
+                    Ok(stream) => stream,
+                    Err(err) => {
+                        log::warn!("cannot accept the stream of the hidden service: {err}");
+                        continue;
+                    }
+                };
+                tokio::spawn(serve_onion_service(stream, COMPOSE_PAGE.to_string()));
+            }
+        }
+    });
+
+    // The descriptor of the hidden service has to be published to the
+    // hidden service directories and fetched again, so the tunnel is
+    // retried for a few minutes.
+    let deadline = Instant::now() + Duration::from_secs(300);
+    let mut client = loop {
+        let mut client = Socks5Client::connect(endpoint).await;
+        client.greet(&[METHOD_NONE]).await;
+        let reply = client.request(&connect_request_domain(&host, 80)).await;
+        if reply[1] == REP_SUCCESS {
+            break client;
+        }
+        anyhow::ensure!(
+            Instant::now() < deadline,
+            "the hidden service {host} did not become reachable"
+        );
+        tokio::time::sleep(Duration::from_secs(5)).await;
+    };
+
+    // The compose page comes through the tunnel.
+    let response = client
+        .exchange(
+            format!("GET /compose HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n")
+                .as_bytes(),
+        )
+        .await;
+
+    assert!(
+        response.starts_with("HTTP/1.1 200 OK"),
+        "the hidden service must answer with a valid status line: {response:?}"
+    );
+    assert!(
+        response.contains("<textarea"),
+        "the compose page must have a text area"
+    );
+    assert!(
+        response.contains("-----BEGIN PGP MESSAGE-----"),
+        "the compose page must carry the armored OpenPGP message"
+    );
+
+    service.shutdown();
     Ok(())
 }
