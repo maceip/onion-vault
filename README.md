@@ -375,4 +375,5 @@ real CEF headers and bindings without the engine.
 
 ## Licence
 
-Apache-2.0 OR MIT
+Apache-2.0 OR MIT — the texts are in [`LICENSE-APACHE`](LICENSE-APACHE) and
+[`LICENSE-MIT`](LICENSE-MIT).
