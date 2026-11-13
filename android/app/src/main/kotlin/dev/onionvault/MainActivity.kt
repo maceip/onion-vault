@@ -100,6 +100,7 @@ class MainActivity : FragmentActivity(), OvBridge.Listener {
                 onNewTab = { newTab() },
                 onCreateKey = { createKey() },
                 onExportKey = { exportKey(it) },
+                onLoadLegalLines = { name -> LegalNotices.read(this, name) },
                 surface = {
                     AndroidView(
                         factory = { context ->
@@ -113,6 +114,10 @@ class MainActivity : FragmentActivity(), OvBridge.Listener {
 
         // The keys of the keyring are shown by the key manager.
         refreshKeys()
+
+        // The licences that travel with the application are shown by the
+        // button of the licences.
+        uiState = uiState.copy(legalDocuments = LegalNotices.list(this))
 
         // The first page: the start page of the application.
         val start = savedInstanceState?.getString(STATE_URL) ?: getString(R.string.start_url)

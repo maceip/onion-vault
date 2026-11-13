@@ -31,6 +31,22 @@ data class BrowserUiState(
     val blocked: Boolean = false,
     /** The keys of the keyring. */
     val keys: List<KeyInfo> = emptyList(),
+    /** The licence documents that travel with the application. */
+    val legalDocuments: List<LegalDocument> = emptyList(),
+)
+
+/**
+ * A licence document that is packaged into the application.
+ *
+ * @property name the file name of the document in the assets.
+ * @property title the name that is shown to the user.
+ * @property sizeBytes the size of the document in bytes.
+ */
+@Immutable
+data class LegalDocument(
+    val name: String,
+    val title: String,
+    val sizeBytes: Long,
 )
 
 /**

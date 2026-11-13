@@ -275,6 +275,19 @@ travel with the release
 (`cefrium-sdk-0.19.0-NOTICE.txt`); the third party dependencies of OnionVault
 are listed in [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
 
+The licence of the engine has to be readable by the recipient of the binary.
+The full text of every licence is therefore
+
+  * in the [`licenses/`](licenses/) directory of this repository,
+  * inside the APK, under `assets/licenses/`, where the application shows it
+    (the button of the book in the upper bar),
+  * and attached to every release of the project, next to the APK.
+
+The notice of the engine is 2.2 MiB and belongs to the exact build of the
+engine, so it is not kept in the repository: the continuous integration
+downloads it from the release of Cefrium, verifies it against the published
+`SHA256SUMS-0.19.0` and puts it into the APK next to the other texts.
+
 The sysroot has to provide the shared object and the resource files; the C++
 wrapper is optional, because a distribution that ships one self-contained
 `libcef.so` (as Cefrium does) exports every C API function from it:
@@ -283,13 +296,15 @@ wrapper is optional, because a distribution that ships one self-contained
 $CEF_ANDROID_ROOT/
 ├── lib/
 │   └── libcef.so       the Chromium runtime (packaged into the APK)
+├── NOTICE.txt          the notice of the engine (packaged into the APK)
 └── Resources/          resources.pak, chrome_100_percent.pak,
                         chrome_200_percent.pak, icudtl.dat, locales/…
 ```
 
 `build.rs` copies the resource files into
 `android/app/src/main/assets/cef/`, the Gradle build copies `libcef.so` into
-the APK.
+the APK and the licence documents into
+`android/app/src/main/assets/licenses/`.
 
 The link step needs the NDK toolchain of API 29 or later: `libnativewindow`,
 which carries the `ANativeWindow` of the off-screen rendering, was introduced

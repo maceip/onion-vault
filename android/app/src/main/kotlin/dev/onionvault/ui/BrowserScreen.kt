@@ -80,6 +80,10 @@ import kotlinx.coroutines.withContext
  * it to show the gesture in the middle of the swipe.
  * @param showKeyManager the key manager is open; the previews use it to show
  * the manager of the keys.
+ * @param showLegalNotices the list of the licences is open; the previews use
+ * it to show the licences that travel with the application.
+ * @param onLoadLegalLines the function that reads the text of a licence
+ * document; it is called away from the thread of the interface.
  */
 @Composable
 fun BrowserScreen(
@@ -95,9 +99,11 @@ fun BrowserScreen(
     onNewTab: () -> Unit = {},
     onCreateKey: () -> Unit = {},
     onExportKey: (String) -> Unit = {},
+    onLoadLegalLines: suspend (String) -> List<String> = { emptyList() },
     surface: @Composable () -> Unit = {},
     previewProgress: Float = 0f,
     showKeyManager: Boolean = false,
+    showLegalNotices: Boolean = false,
 ) {
     var address by remember(state.url) { mutableStateOf(state.url) }
     // The preview of the gesture starts in the state that the parameter
@@ -107,6 +113,8 @@ fun BrowserScreen(
     var progress by remember { mutableFloatStateOf(previewProgress) }
     var edge by remember { mutableStateOf(BackEventCompat.EDGE_LEFT) }
     var keysOpen by remember { mutableStateOf(showKeyManager) }
+    var legalOpen by remember { mutableStateOf(showLegalNotices) }
+    var legalDocument by remember { mutableStateOf<LegalDocument?>(null) }
     val scope = rememberCoroutineScope()
 
     PredictiveBackHandler(enabled = state.canGoBack) { backFlow ->
@@ -146,6 +154,7 @@ fun BrowserScreen(
             state = state,
             onBrand = onNewTab,
             onKeys = { keysOpen = true },
+            onLegal = { legalOpen = true },
         )
 
         NavigationBar(
@@ -201,19 +210,40 @@ fun BrowserScreen(
             onDismiss = { keysOpen = false },
         )
     }
+
+    if (legalOpen) {
+        LegalNoticesDialog(
+            documents = state.legalDocuments,
+            onOpenDocument = { document ->
+                legalOpen = false
+                legalDocument = document
+            },
+            onDismiss = { legalOpen = false },
+        )
+    }
+
+    legalDocument?.let { document ->
+        LegalDocumentDialog(
+            document = document,
+            loadLines = { onLoadLegalLines(document.name) },
+            onDismiss = { legalDocument = null },
+        )
+    }
 }
 
 /**
  * The bar with the brand of OnionVault.
  *
  * It carries the mark of the application, the title of the page, the state
- * of the transport and the button of the key manager.
+ * of the transport, the button of the key manager and the button of the
+ * licences.
  */
 @Composable
 private fun BrandBar(
     state: BrowserUiState,
     onBrand: () -> Unit,
     onKeys: () -> Unit,
+    onLegal: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -257,6 +287,13 @@ private fun BrandBar(
             contentDescription = "The key manager",
             onClick = onKeys,
             tint = OnionPalette.Leaf,
+        )
+        Spacer(Modifier.width(4.dp))
+        OvIconButton(
+            icon = painterResource(R.drawable.ic_ov_legal),
+            contentDescription = "The licences of OnionVault",
+            onClick = onLegal,
+            tint = OnionPalette.AmberLight,
         )
     }
 }

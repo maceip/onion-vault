@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import dev.onionvault.ui.previews.LegalNoticesPreview
 import dev.onionvault.ui.previews.PgpActionChipsPreview
 import dev.onionvault.ui.previews.PgpDecryptionModalPreview
 import dev.onionvault.ui.previews.PredictiveBackPreview
@@ -53,6 +54,11 @@ class ScreenshotTest {
     @Test
     fun the_key_manager_is_rendered() {
         capture("4-key-manager") { PgpDecryptionModalPreview() }
+    }
+
+    @Test
+    fun the_legal_notices_are_rendered() {
+        capture("5-legal-notices") { LegalNoticesPreview() }
     }
 
     /** Render a preview and write it into `build/screenshots/`. */

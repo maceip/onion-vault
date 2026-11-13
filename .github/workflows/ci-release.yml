@@ -60,7 +60,7 @@ jobs:
       ONIONVAULT_CEF_CHECK_ONLY: "1"
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install system build dependencies
         # `rusqlite` is built with the `bundled` feature, i.e. SQLite is
@@ -84,7 +84,7 @@ jobs:
           components: rustfmt, clippy
 
       - name: Cache the Cargo registry, the Cargo git checkouts and the target directory
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry
@@ -116,7 +116,7 @@ jobs:
 
       - name: Upload the test output
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: rust-test-output
           path: test-results/
@@ -138,10 +138,10 @@ jobs:
       CEF_ANDROID_ROOT: ${{ github.workspace }}/cef-runtime/root
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
@@ -149,13 +149,13 @@ jobs:
       - name: Set up Gradle
         # `setup-gradle` provides the Gradle caches (~/.gradle/caches, the
         # wrapper distribution and the build cache) for the Gradle steps below.
-        uses: gradle/actions/setup-gradle@v4
+        #
+        # The action computes the key of its own cache from the job and the
+        # commit; it has no `cache-dependency-path` input (the annotation of
+        # the pipeline complained about an input that the action never had).
+        uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: false
-          cache-dependency-path: |
-            android/**/*.gradle.kts
-            android/settings.gradle.kts
-            android/gradle/wrapper/gradle-wrapper.properties
 
       - name: Put the SDK tools on the path
         # The image of the runner already carries the Android SDK; the
@@ -223,7 +223,7 @@ jobs:
         run: cargo install cargo-ndk --locked
 
       - name: Cache the Cargo registry, the Cargo git checkouts and the target directories
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry
@@ -261,6 +261,32 @@ jobs:
           cp cef-runtime/unpacked/assets/stored-locales/en-US.pak* "${CEF_ANDROID_ROOT}/locales/en-US.pak"
           ls -la "${CEF_ANDROID_ROOT}" "${CEF_ANDROID_ROOT}/lib"
 
+      - name: Download the notice of the engine
+        # The notice carries the licences of the Chromium sources and of every
+        # library they are built from.  It belongs to the exact build of the
+        # engine and is therefore downloaded with the engine instead of being
+        # kept in the repository.
+        #
+        # The sum file of the release is checked first against its own
+        # published checksum, and the notice is then checked against the sum
+        # file: a notice that does not belong to the engine stops the build.
+        run: |
+          set -euo pipefail
+          base="https://codeberg.org/cefrium/cef-android/releases/download/v0.19.0"
+          curl -sSL --retry 3 --retry-delay 5 -o cef-runtime/SHA256SUMS-0.19.0 "${base}/SHA256SUMS-0.19.0"
+          echo "9cecc54c3a38829767ae8f2cff65080f7b420661e1b084421e39b51c3b8e1140  cef-runtime/SHA256SUMS-0.19.0" \
+            | sha256sum --check --strict -
+          curl -sSL --retry 3 --retry-delay 5 -o cef-runtime/cefrium-sdk-0.19.0-NOTICE.txt \
+            "${base}/cefrium-sdk-0.19.0-NOTICE.txt"
+          (
+            cd cef-runtime
+            grep 'cefrium-sdk-0.19.0-NOTICE.txt' SHA256SUMS-0.19.0 | sha256sum --check --strict -
+          )
+          # The Gradle build puts the notice next to the licences of the
+          # repository into the assets of the APK.
+          cp cef-runtime/cefrium-sdk-0.19.0-NOTICE.txt "${CEF_ANDROID_ROOT}/NOTICE.txt"
+          ls -la "${CEF_ANDROID_ROOT}/NOTICE.txt"
+
       - name: Cross-compile the Rust crates for Android
         # The crates are type-checked for `aarch64-linux-android` with the
         # NDK toolchain of the job and the CEF runtime of the step above.
@@ -283,6 +309,9 @@ jobs:
       - name: Check the content of the APK
         # The APK without the engine would not start: the check fails the
         # build if one of the three parts is missing.
+        #
+        # The licences have to travel with the binary as well: the LGPL-3.0 of
+        # the engine asks for the recipient to be able to read it.
         run: |
           set -euo pipefail
           apk="android/app/build/outputs/apk/debug/app-debug.apk"
@@ -293,7 +322,11 @@ jobs:
             "lib/arm64-v8a/libcef.so" \
             "lib/arm64-v8a/libonion_vault.so" \
             "assets/cef/icudtl.dat" \
-            "assets/cef/resources.pak"; do
+            "assets/cef/resources.pak" \
+            "assets/licenses/LGPL-3.0.txt" \
+            "assets/licenses/GPL-3.0.txt" \
+            "assets/licenses/LGPL-2.1.txt" \
+            "assets/licenses/CEFRIUM-NOTICE.txt"; do
             if ! grep -qF -- "$entry" <<< "$listing"; then
               echo "::error::The APK does not contain $entry"
               exit 1
@@ -302,15 +335,26 @@ jobs:
           done
 
       - name: Upload the debug APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: onionvault-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
 
+      - name: Upload the licence documents
+        # The same files that are inside the APK; the release attaches them
+        # next to the binary, so that the licences travel with the download
+        # of the APK as well.
+        uses: actions/upload-artifact@v6
+        with:
+          name: onionvault-legal-notices
+          path: android/app/src/main/assets/licenses/
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Upload the Android unit test reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: android-unit-test-reports
           path: |
@@ -334,10 +378,16 @@ jobs:
       RELEASE_TAG: build-${{ github.run_number }}-${{ github.sha }}
     steps:
       - name: Download the debug APK artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: onionvault-debug-apk
           path: dist
+
+      - name: Download the licence documents artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: onionvault-legal-notices
+          path: dist-legal
 
       - name: Compute the SHA-256 checksum of the APK
         id: apk
@@ -353,6 +403,22 @@ jobs:
           echo "sha256=${sha256}" >> "$GITHUB_OUTPUT"
           echo "SHA-256 of ${apk_path}: ${sha256}"
 
+      - name: Compute the SHA-256 checksums of the licence documents
+        run: |
+          set -euo pipefail
+          licenses="$(find dist-legal -type f -name '*.txt' | sort)"
+          if [ -z "${licenses}" ]; then
+            echo "::error::No licence document found in the onionvault-legal-notices artifact"
+            exit 1
+          fi
+          # The format is the one of `sha256sum`, so that the file can be
+          # checked with `sha256sum --check SHA256SUMS.txt`.
+          while read -r file; do
+            echo "$(sha256sum "${file}" | cut -d' ' -f1)  $(basename "${file}")"
+          done <<< "${licenses}" > SHA256SUMS.txt
+          echo "The licences of the release:"
+          cat SHA256SUMS.txt
+
       - name: Create or update the tagged GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -363,11 +429,24 @@ jobs:
 
           title="OnionVault debug build ${GITHUB_RUN_NUMBER} (${GITHUB_SHA:0:7})"
 
+          # The licences of the engine travel with the binary: they are
+          # attached to the release next to the APK.
+          licenses="$(find dist-legal -type f -name '*.txt' | sort)"
+          if [ -z "${licenses}" ]; then
+            echo "::error::No licence document found in the onionvault-legal-notices artifact"
+            exit 1
+          fi
+          echo "The release carries these licences:"
+          while read -r file; do
+            echo "  $(basename "${file}")"
+          done <<< "${licenses}"
+
           if gh release view "${RELEASE_TAG}" --repo "${GITHUB_REPOSITORY}" > /dev/null 2>&1; then
             # The tag already exists: this is a re-run of the same push.  The
             # release is updated instead of failing.
             echo "Release ${RELEASE_TAG} already exists — updating it in place."
             gh release upload "${RELEASE_TAG}" "${APK_PATH}" --repo "${GITHUB_REPOSITORY}" --clobber
+            gh release upload "${RELEASE_TAG}" ${licenses} SHA256SUMS.txt --repo "${GITHUB_REPOSITORY}" --clobber
           else
             echo "Creating the new release ${RELEASE_TAG} at commit ${GITHUB_SHA}."
             gh release create "${RELEASE_TAG}" \
@@ -377,7 +456,9 @@ jobs:
               --generate-notes \
               --latest \
               --prerelease=false \
-              "${APK_PATH}"
+              "${APK_PATH}" \
+              ${licenses} \
+              SHA256SUMS.txt
           fi
 
           # Start from the auto-generated changelog and append the build
@@ -396,6 +477,17 @@ jobs:
             echo "| commit | \`${GITHUB_SHA}\` |"
             echo "| workflow run | ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID} |"
             echo "| SHA-256 (\`app-debug.apk\`) | \`${APK_SHA256}\` |"
+            echo
+            echo "### The licences of this build"
+            echo
+            echo "The engine of the browser is the CEF port of Cefrium, which is free"
+            echo "software under the **LGPL-3.0-or-later**.  The full text of every"
+            echo "licence is attached to this release and is inside the APK, where the"
+            echo "application shows it."
+            echo
+            echo '```'
+            cat SHA256SUMS.txt
+            echo '```'
           } >> release-body.md
 
           gh release edit "${RELEASE_TAG}" \

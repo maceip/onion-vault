@@ -34,9 +34,10 @@ android {
     }
 
     // There is no CMake project: the whole native part of OnionVault is
-    // written in Rust and built by cargo-ndk.  The CEF C++ wrapper
-    // (`libcef_dll_wrapper.a`) is cross-compiled once against the CEF
-    // Android distribution, see docs/cef-android.md.
+    // written in Rust and built by cargo-ndk.  The C++ wrapper
+    // (`libcef_dll_wrapper.a`) is not needed either: the engine of Cefrium
+    // ships a `libcef.so` that carries the wrapper and exports the whole
+    // C API, so the native library links against the shared object alone.
 
     buildFeatures {
         // The user interface is written with Jetpack Compose.
@@ -136,9 +137,9 @@ android {
 /**
  * The root of the CEF Android distribution.
  *
- * The distribution provides `libcef.so` and the C++ wrapper
- * `libcef_dll_wrapper.a`; both are linked into the native library and
- * `libcef.so` is packaged into the APK.
+ * The distribution provides `libcef.so`, which carries the C++ wrapper and
+ * exports the whole C API; it is linked against by the native library and
+ * packaged into the APK.  The notice of the engine lives next to it.
  */
 val cefRoot: String? = System.getenv("CEF_ANDROID_ROOT")
     ?: rootProject.file("cef/android-arm64").takeIf { it.exists() }?.absolutePath
@@ -178,9 +179,34 @@ val copyCefRuntime by tasks.registering(Copy::class) {
     onlyIf { cefRoot != null }
 }
 
+/**
+ * Copy the licence documents into the assets of the APK.
+ *
+ * The LGPL-3.0 of the engine asks for the recipient of the binary to be able
+ * to read the licence of the library: the texts therefore travel with the
+ * application and are shown by the interface.
+ *
+ * The texts of the repository are in `licenses/`; the notice of the engine
+ * belongs to the exact build of the engine and is downloaded by the
+ * continuous integration, which puts it next to `libcef.so`.
+ */
+val copyLegalNotices by tasks.registering(Copy::class) {
+    group = "build"
+    description = "Copies the licence documents into the assets of the application."
+
+    from(rootProject.file("../licenses")) {
+        include("*.txt")
+    }
+    from(cefRoot?.let { file("$it/NOTICE.txt") }) {
+        rename { "CEFRIUM-NOTICE.txt" }
+    }
+    into(rootProject.file("app/src/main/assets/licenses"))
+}
+
 tasks.named("preBuild") {
     dependsOn(cargoBuild)
     dependsOn(copyCefRuntime)
+    dependsOn(copyLegalNotices)
 }
 
 /**

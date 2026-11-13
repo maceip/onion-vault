@@ -17,6 +17,9 @@ android/app/src/main/jniLibs/
 android/app/src/main/assets/cef/*
 !android/app/src/main/assets/cef/README.md
 
+# The licence documents (they are copied from `licenses/` by the Gradle build)
+android/app/src/main/assets/licenses/
+
 # Editors
 .idea/
 *.iml

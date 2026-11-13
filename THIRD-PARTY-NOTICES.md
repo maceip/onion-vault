@@ -47,5 +47,23 @@ travel with the release as `cefrium-sdk-0.19.0-NOTICE.txt`, and the
 continuous integration verifies the checksum of the download before it links
 against it.
 
+## The licence texts
+
+The full text of every licence that applies to a component is in the
+[`licenses/`](licenses/) directory of this repository:
+
+| file | component | licence |
+|---|---|---|
+| `LGPL-3.0.txt` | the CEF engine of Cefrium | LGPL-3.0-or-later |
+| `GPL-3.0.txt` | the GNU GPL that the LGPL-3.0 incorporates | GPL-3.0-or-later |
+| `LGPL-2.1.txt` | sequoia-openpgp | LGPL-2.0-or-later |
+
+The texts are inside the APK as well, under `assets/licenses/`, where the
+application shows them, and they are attached to every GitHub Release next to
+the APK.  The notice of the engine, which carries the licences of the
+Chromium sources and of the libraries they are built from, is downloaded by
+the continuous integration together with the engine and is put into the APK
+next to these texts.
+
 The artwork of the launcher icon and of the interface was made for OnionVault
 and is covered by the licence of this repository.

@@ -26,6 +26,7 @@ import dev.onionvault.ui.BrowserUiState
 import dev.onionvault.ui.CircuitHop
 import dev.onionvault.ui.CircuitState
 import dev.onionvault.ui.KeyInfo
+import dev.onionvault.ui.LegalDocument
 import dev.onionvault.ui.NormalizedBounds
 import dev.onionvault.ui.PgpFieldState
 import dev.onionvault.ui.PgpOverlayState
@@ -291,6 +292,54 @@ fun PgpDecryptionModalPreview() {
             ),
         ),
         showKeyManager = true,
+        surface = { MockHiddenServicePage() },
+    )
+}
+
+/**
+ * The fifth preview: the licences that travel with the application.
+ *
+ * The LGPL-3.0 of the engine asks for the recipient of the binary to be able
+ * to read the licence of the library; the texts are therefore shown by the
+ * application itself.
+ */
+@Preview(name = "5. Legal Notices of the Bundled Engine", heightDp = 640)
+@Composable
+fun LegalNoticesPreview() {
+    BrowserScreen(
+        state = BrowserUiState(
+            url = "http://sdshqo3t6ilcq6cyudujqi3l5n6dqsmx6x3rv3moymqm3vhch6ad.onion",
+            title = "SecureDrop",
+            tor = TorBootstrapState(
+                percent = 100,
+                stage = "ready",
+                ready = true,
+                isolationToken = "iso-3f7c91a2b4e08d6a",
+            ),
+            legalDocuments = listOf(
+                LegalDocument(
+                    name = "LGPL-3.0.txt",
+                    title = "GNU Lesser General Public License 3.0",
+                    sizeBytes = 42_098,
+                ),
+                LegalDocument(
+                    name = "GPL-3.0.txt",
+                    title = "GNU General Public License 3.0",
+                    sizeBytes = 34_674,
+                ),
+                LegalDocument(
+                    name = "LGPL-2.1.txt",
+                    title = "GNU Lesser General Public License 2.1",
+                    sizeBytes = 26_001,
+                ),
+                LegalDocument(
+                    name = "CEFRIUM-NOTICE.txt",
+                    title = "The notice of the CEF engine",
+                    sizeBytes = 2_273_727,
+                ),
+            ),
+        ),
+        showLegalNotices = true,
         surface = { MockHiddenServicePage() },
     )
 }
