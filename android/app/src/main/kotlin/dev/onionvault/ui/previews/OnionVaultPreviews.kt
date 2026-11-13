@@ -25,6 +25,7 @@ import dev.onionvault.ui.BrowserScreen
 import dev.onionvault.ui.BrowserUiState
 import dev.onionvault.ui.CircuitHop
 import dev.onionvault.ui.CircuitState
+import dev.onionvault.ui.KeyInfo
 import dev.onionvault.ui.NormalizedBounds
 import dev.onionvault.ui.PgpFieldState
 import dev.onionvault.ui.PgpOverlayState
@@ -41,10 +42,13 @@ import dev.onionvault.ui.TorBootstrapState
  */
 private object Previews {
     /** The color of the background of the hidden service page. */
-    val Page = Color(0xFF101418)
+    val Page = Color(0xFF12100E)
 
     /** The color of the text of the hidden service page. */
-    val Text = Color(0xFFD7DEE5)
+    val Text = Color(0xFFD9D2C6)
+
+    /** The color of the field of the hidden service page. */
+    val Field = Color(0xFF1B1815)
 }
 
 /**
@@ -78,13 +82,13 @@ private fun MockHiddenServicePage() {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(90.dp)
-                .border(1.dp, Color(0xFF00E5FF), RoundedCornerShape(4.dp))
-                .background(Color(0xFF151A20))
+                .border(1.dp, Color(0xFF1E8C9B), RoundedCornerShape(4.dp))
+                .background(Previews.Field)
                 .padding(8.dp),
         ) {
             Text(
                 text = "This message will be encrypted with the recipient's key.",
-                color = Color(0xFF6C7885),
+                color = Color(0xFF8A8175),
                 fontSize = 12.sp,
             )
         }
@@ -93,13 +97,13 @@ private fun MockHiddenServicePage() {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(70.dp)
-                .border(1.dp, Color(0xFFFFB300), RoundedCornerShape(4.dp))
-                .background(Color(0xFF151A20))
+                .border(1.dp, Color(0xFF9A6224), RoundedCornerShape(4.dp))
+                .background(Previews.Field)
                 .padding(8.dp),
         ) {
             Text(
                 text = "-----BEGIN PGP MESSAGE-----\n\nhQEMA...\n-----END PGP MESSAGE-----",
-                color = Color(0xFF9AA7B4),
+                color = Color(0xFF8A8175),
                 fontSize = 10.sp,
                 fontFamily = FontFamily.Monospace,
             )
@@ -273,7 +277,20 @@ fun PgpDecryptionModalPreview() {
                     signerFingerprint = "6F1A 2C93 9B4E 77D1 0E58 5A62 3F8B 91C4 7D0A 11E2",
                 ),
             ),
+            keys = listOf(
+                KeyInfo(
+                    fingerprint = "6F1A2C939B4E77D10E585A623F8B91C47D0A11E2",
+                    userId = "Anna <anna@protonmail.com>",
+                    hasSecret = false,
+                ),
+                KeyInfo(
+                    fingerprint = "A3D9071F5C2E8B40D16F7394C8E5A2B6F04D71C93",
+                    userId = "OnionVault <7f3c91a2@example.onion>",
+                    hasSecret = true,
+                ),
+            ),
         ),
+        showKeyManager = true,
         surface = { MockHiddenServicePage() },
     )
 }

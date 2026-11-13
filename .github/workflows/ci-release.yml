@@ -7,19 +7,23 @@
 #   2. `android-build` — Compose preview smoke test and debug APK assembly,
 #   3. `release`       — publishes a *new* tagged GitHub Release with the APK.
 #
-# The CEF (Chromium Embedded Framework) *Android* binary distribution is not
-# publicly available, so CI can neither download nor link it.  The vendored
-# build scripts understand `ONIONVAULT_CEF_CHECK_ONLY=1`: with that flag the
-# CEF link step and the CEF resource packaging are skipped, while everything
-# else is still type-checked, unit-tested and assembled into an APK.  The flag
-# is therefore set for the whole pipeline and the CI never fails merely
-# because the CEF distribution is missing.
+# The `rust-tests` job does not need the CEF runtime: the vendored build
+# scripts understand `ONIONVAULT_CEF_CHECK_ONLY=1`, which skips the CEF link
+# step and the packaging of the CEF resources, while everything else is still
+# type-checked, unit-tested and assembled into an APK.
 #
-# For the same reason the native Rust library is not cross-compiled in CI:
-# `ONIONVAULT_SKIP_CARGO=1` turns the Gradle `cargoBuild` task into a no-op
-# (see `android/app/build.gradle.kts`), because that library has to be linked
-# against `libcef.so`, which does not exist here.  The APK is therefore
-# assembled without the CEF dependent native library.
+# The `android-build` job builds the *real* APK: it downloads the CEF runtime
+# for Android (Cefrium, the port of CEF to `aarch64-linux-android`, built on
+# the same Chromium release as the CEF 156 bindings of this project), links
+# the native library of OnionVault against it and packages the engine into
+# the APK.
+#
+# The C++ wrapper (`libcef_dll_wrapper.a`) is not needed: the distribution
+# ships a self-contained `libcef.so` that exports the whole C API.
+#
+# The release job publishes the APK of that build with its SHA-256 sum; every
+# push gets its own tag (`build-<run number>-<commit>`), so no release ever
+# overwrites the artefact of an earlier build.
 
 name: CI & Release
 
@@ -128,14 +132,10 @@ jobs:
       contents: read
       actions: read
     env:
-      # The native library of the APK has to be linked against `libcef.so`,
-      # which is not available in CI (see the header comment).  This flag makes
-      # the Gradle `cargoBuild` task skip the native step, so the APK can
-      # still be assembled.
-      ONIONVAULT_SKIP_CARGO: "1"
-      # The cross compilation of the Rust crates is checked against the real
-      # CEF bindings, without linking against the CEF runtime.
-      ONIONVAULT_CEF_CHECK_ONLY: "1"
+      # The root of the CEF runtime for Android.  The step below downloads the
+      # engine and prepares this directory; the Gradle build links the native
+      # library against it and packages it into the APK.
+      CEF_ANDROID_ROOT: ${{ github.workspace }}/cef-runtime/root
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
@@ -206,10 +206,31 @@ jobs:
           restore-keys: |
             cargo-android-${{ runner.os }}-
 
+      - name: Download the CEF runtime for Android
+        # Cefrium is the port of CEF to `aarch64-linux-android`; release
+        # 0.18.0 is built on Chromium 156, the Chromium release of the CEF
+        # 156 bindings of this project.  The engine is inside the release
+        # APK of the project; it is unpacked into the sysroot that the
+        # build scripts expect.
+        run: |
+          set -euo pipefail
+          mkdir -p cef-runtime
+          curl -sSL --retry 3 --retry-delay 5 -o cef-runtime/cefrium.apk \
+            "https://codeberg.org/cefrium/cef-android/releases/download/v0.18.0/cefrium-browser-0.18.0-debug.apk"
+          unzip -q cef-runtime/cefrium.apk 'lib/arm64-v8a/libcef.so' 'assets/*' -d cef-runtime/unpacked
+          mkdir -p "${CEF_ANDROID_ROOT}/lib" "${CEF_ANDROID_ROOT}/locales"
+          cp cef-runtime/unpacked/lib/arm64-v8a/libcef.so "${CEF_ANDROID_ROOT}/lib/"
+          # The asset manager renames the resource files; the original names
+          # are restored, because Chromium reads them by name.
+          for file in cef-runtime/unpacked/assets/*.pak* cef-runtime/unpacked/assets/icudtl.dat*; do
+            cp "$file" "${CEF_ANDROID_ROOT}/$(basename "${file%+com.cefrium+}")"
+          done
+          cp cef-runtime/unpacked/assets/stored-locales/en-US.pak* "${CEF_ANDROID_ROOT}/locales/en-US.pak"
+          ls -la "${CEF_ANDROID_ROOT}" "${CEF_ANDROID_ROOT}/lib"
+
       - name: Cross-compile the Rust crates for Android
         # The crates are type-checked for `aarch64-linux-android` with the
-        # NDK toolchain of the job; the CEF runtime is not linked (see
-        # `ONIONVAULT_CEF_CHECK_ONLY`).
+        # NDK toolchain of the job and the CEF runtime of the step above.
         run: |
           set -o pipefail
           mkdir -p test-results
@@ -220,10 +241,32 @@ jobs:
         run: ./gradlew :app:testDebugUnitTest --tests 'dev.onionvault.OnionVaultPreviewsTest' --stacktrace
 
       - name: Assemble the debug APK
-        # `ONIONVAULT_SKIP_CARGO=1` (job environment) skips the native Rust
-        # build, so no CEF distribution is needed for the APK.
+        # The native library is cross-compiled and linked against the engine
+        # of the first step; the APK carries the engine, the native library
+        # and the resource files of Chromium.
         working-directory: android
         run: ./gradlew :app:assembleDebug --stacktrace
+
+      - name: Check the content of the APK
+        # The APK without the engine would not start: the check fails the
+        # build if one of the three parts is missing.
+        run: |
+          set -euo pipefail
+          apk="android/app/build/outputs/apk/debug/app-debug.apk"
+          # The listing is taken once: a `grep` that stops early would
+          # break the pipe of `unzip` and fail the step with `pipefail`.
+          listing="$(unzip -l "$apk")"
+          for entry in \
+            "lib/arm64-v8a/libcef.so" \
+            "lib/arm64-v8a/libonion_vault.so" \
+            "assets/cef/icudtl.dat" \
+            "assets/cef/resources.pak"; do
+            if ! grep -qF -- "$entry" <<< "$listing"; then
+              echo "::error::The APK does not contain $entry"
+              exit 1
+            fi
+            echo "OK  $entry"
+          done
 
       - name: Upload the debug APK
         uses: actions/upload-artifact@v4

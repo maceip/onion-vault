@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- An open padlock: the button that decrypts a message. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#FFFFFFFF">
+    <path
+        android:pathData="M8,10.5 V7.5 A4,4 0 0 1 15.6,5.6"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M5.5,10.5 H18.5 A1.5,1.5 0 0 1 20,12 V19 A1.5,1.5 0 0 1 18.5,20.5 H5.5 A1.5,1.5 0 0 1 4,19 V12 A1.5,1.5 0 0 1 5.5,10.5 Z"
+        android:fillColor="#FFFFFFFF" />
+</vector>

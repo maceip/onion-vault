@@ -331,6 +331,24 @@ mod jni_entry_points {
         ov_core::jni_api::Java_dev_onionvault_OvNative_nativeGenerateKey(env, _this, user_id)
     }
 
+    /// The JNI entry point `Java_dev_onionvault_OvNative_nativeGoForward`.
+    #[no_mangle]
+    pub extern "system" fn Java_dev_onionvault_OvNative_nativeGoForward(
+        env: JNIEnv,
+        _this: JObject,
+    ) -> jboolean {
+        ov_core::jni_api::Java_dev_onionvault_OvNative_nativeGoForward(env, _this)
+    }
+
+    /// The JNI entry point `Java_dev_onionvault_OvNative_nativeListKeys`.
+    #[no_mangle]
+    pub extern "system" fn Java_dev_onionvault_OvNative_nativeListKeys(
+        env: JNIEnv,
+        _this: JObject,
+    ) -> jstring {
+        ov_core::jni_api::Java_dev_onionvault_OvNative_nativeListKeys(env, _this)
+    }
+
     /// The JNI entry point `Java_dev_onionvault_OvNative_nativeExportPublicKey`.
     #[no_mangle]
     pub extern "system" fn Java_dev_onionvault_OvNative_nativeExportPublicKey(

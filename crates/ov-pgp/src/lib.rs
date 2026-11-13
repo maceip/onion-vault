@@ -35,6 +35,18 @@ pub fn parse_fingerprint(text: &str) -> Result<Fingerprint> {
     Ok(Fingerprint::from_bytes(&bytes))
 }
 
+/// The user id of an armored certificate.
+///
+/// The keyring stores the armored certificate; the user id is read from it
+/// for the key manager of the native UI.
+pub fn user_id_of(armored: &str) -> Option<String> {
+    use sequoia_openpgp::parse::Parse;
+
+    let cert = sequoia_openpgp::Cert::from_bytes(armored.as_bytes()).ok()?;
+    let user_id = cert.userids().next()?;
+    Some(String::from_utf8_lossy(user_id.value()).into_owned())
+}
+
 /// Build the master key provider for the current platform.
 ///
 /// On Android the master wrapping key is created inside the hardware backed

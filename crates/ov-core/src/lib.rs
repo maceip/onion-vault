@@ -938,6 +938,66 @@ pub mod jni_api {
         }
     }
 
+    /// Go forward in the history of the browser.
+    pub extern "system" fn Java_dev_onionvault_OvNative_nativeGoForward(
+        _env: JNIEnv,
+        _this: JObject,
+    ) -> jboolean {
+        let Some(state) = engine() else {
+            return 0;
+        };
+        let Some(browser) = state.browser() else {
+            return 0;
+        };
+        if !browser.can_go_forward().cef_truthy() {
+            return 0;
+        }
+        browser.go_forward();
+        1
+    }
+
+    /// The keys of the keyring.
+    ///
+    /// The list is a JSON document with one entry per certificate: the
+    /// fingerprint, the user id, whether a secret key is stored for it and
+    /// the moment of its creation.
+    pub extern "system" fn Java_dev_onionvault_OvNative_nativeListKeys(
+        env: JNIEnv,
+        _this: JObject,
+    ) -> jstring {
+        let Some(state) = engine() else {
+            return std::ptr::null_mut();
+        };
+        let certificates = match state.keyring.certificates() {
+            Ok(certificates) => certificates,
+            Err(err) => {
+                log::error!("cannot read the keyring: {err:#}");
+                return std::ptr::null_mut();
+            }
+        };
+
+        let entries: Vec<serde_json::Value> = certificates
+            .iter()
+            .map(|certificate| {
+                serde_json::json!({
+                    "fingerprint": certificate.fingerprint.to_string(),
+                    "userId": ov_pgp::user_id_of(&certificate.armored).unwrap_or_default(),
+                    "hasSecret": certificate.has_secret,
+                    "createdAt": certificate.created_at,
+                })
+            })
+            .collect();
+        let payload = serde_json::json!({ "keys": entries });
+
+        match env.new_string(payload.to_string()) {
+            Ok(value) => value.into_raw(),
+            Err(err) => {
+                log::error!("cannot create the key list: {err}");
+                std::ptr::null_mut()
+            }
+        }
+    }
+
     /// Export the armored public key of a fingerprint.
     pub extern "system" fn Java_dev_onionvault_OvNative_nativeExportPublicKey(
         mut env: JNIEnv,

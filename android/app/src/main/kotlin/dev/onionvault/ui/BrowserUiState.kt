@@ -29,6 +29,22 @@ data class BrowserUiState(
     val backPreview: BackPreviewState? = null,
     /** `true` when the last request was blocked by the leak protection. */
     val blocked: Boolean = false,
+    /** The keys of the keyring. */
+    val keys: List<KeyInfo> = emptyList(),
+)
+
+/**
+ * A key of the keyring.
+ *
+ * @property fingerprint the fingerprint of the certificate.
+ * @property userId the user id of the certificate.
+ * @property hasSecret `true` when a secret key is stored for it.
+ */
+@Immutable
+data class KeyInfo(
+    val fingerprint: String,
+    val userId: String,
+    val hasSecret: Boolean,
 )
 
 /**

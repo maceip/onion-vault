@@ -128,6 +128,39 @@ shown instantly, the real page is fetched in the background.
 The manifest sets `android:enableOnBackInvokedCallback="true"`, so the
 predictive back gesture is handed to the application instead of the system.
 
+## The identity of OnionVault
+
+The launcher icon and the whole interface are painted with the artwork of
+the application: a cartoon onion on a badge that fades from teal at the top
+left to cyan at the bottom right.
+
+| colour | value | where it is used |
+|---|---|---|
+| teal | `#1DE5C2` | the primary colour: the navigation, the decryption, the focus |
+| cyan | `#10A1D8` | the end of the gradient of the progress bar |
+| amber | `#F5A93C` | the secondary colour: the primary button, the forward and the reload |
+| leaf | `#A9E45F` | the accent: the keys |
+| outline | `#3A1608` | the line of the artwork, the text on the amber |
+| surface | `#14110E` | the background of the application |
+
+The icon is installed as the legacy icon (a square and a round variant for
+every density) and as the adaptive icon: the background is the gradient of
+the badge, the foreground is the onion of the artwork, and the monochrome
+layer is its silhouette for the themed icons.
+
+Every control of the browser is drawn for this application, in
+`res/drawable/ic_ov_*.xml`: the chevrons of the back and the forward
+button, the circular arrow of the reload button, the window with a plus of
+the new tab button, the key with a leaf of the new key button, the key on a
+ring of the key manager, the shield of the transport, the padlocks of the
+encryption and the decryption, and the arrow into a page that writes the
+plaintext into the page.
+
+The screen has two bars: the brand bar with the mark of the application, the
+title of the page, the state of the transport and the key manager, and the
+navigation bar with the back, the forward, the reload and the new tab
+button, the address field and the *Go* button.
+
 ## The user interface
 
 The user interface is Jetpack Compose.  Every screen is a pure function of
@@ -153,6 +186,11 @@ Android Studio and on the JVM:
 `OnionVaultPreviewsTest` renders all four previews with Robolectric, which
 runs the real Compose runtime on the JVM; the continuous integration runs it
 on every push.
+
+`ScreenshotTest` writes the same previews as PNG files into
+`build/screenshots/`, so that the design can be inspected without a device:
+it draws the window of the activity and the window of the dialog of the key
+manager into the image.
 
 ## The IPC
 
@@ -336,12 +374,21 @@ gradle :app:testDebugUnitTest --tests 'dev.onionvault.OnionVaultPreviewsTest'
 1. **Rust checks and tests** — the formatting, Clippy, the type check of the
    workspace, the unit tests and the integration tests (the PGP round trip and
    the Tor proxy), and the headless DOM fixture test of `ov-cef`,
-2. **Android debug build** — the cross compilation for `aarch64-linux-android`,
-   the Compose preview test and the debug APK,
+2. **Android debug build** — the download of the CEF runtime for Android, the
+   cross compilation for `aarch64-linux-android`, the Compose preview test,
+   the debug APK and a check that the APK really carries the engine,
 3. **Release** — a GitHub release with the APK and its SHA-256 sum.
 
 The tags of the releases are unique (`build-<run number>-<commit>`), so that a
 release never overwrites the artefact of an earlier build.
+
+The pipeline publishes the **real** APK: the second job downloads the CEF
+runtime (see [The CEF runtime](#the-cef-runtime)), links the native library of
+OnionVault against it and fails the build if the engine, the native library or
+the resource files are missing from the APK.
+
+The workflow needs a repository on GitHub: the project is a git repository
+without a remote, so nothing is published until it is pushed to one.
 
 `.github/workflows/live-tor.yml` runs every night the two tests of the suite
 that need the live Tor network: the bootstrap of the client and the tunnel to

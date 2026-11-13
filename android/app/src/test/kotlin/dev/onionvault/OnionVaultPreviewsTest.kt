@@ -1,7 +1,7 @@
 package dev.onionvault
 
+import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onRoot
 import dev.onionvault.ui.previews.PgpActionChipsPreview
 import dev.onionvault.ui.previews.PgpDecryptionModalPreview
 import dev.onionvault.ui.previews.PredictiveBackPreview
@@ -31,24 +31,24 @@ class OnionVaultPreviewsTest {
     @Test
     fun the_tor_bootstrap_preview_renders() {
         compose.setContent { TorBootstrapPreview() }
-        compose.onRoot().assertExists()
+        compose.onAllNodes(isRoot())[0].assertExists()
     }
 
     @Test
     fun the_pgp_action_chips_preview_renders() {
         compose.setContent { PgpActionChipsPreview() }
-        compose.onRoot().assertExists()
+        compose.onAllNodes(isRoot())[0].assertExists()
     }
 
     @Test
     fun the_predictive_back_preview_renders() {
         compose.setContent { PredictiveBackPreview() }
-        compose.onRoot().assertExists()
+        compose.onAllNodes(isRoot())[0].assertExists()
     }
 
     @Test
     fun the_decryption_modal_preview_renders() {
         compose.setContent { PgpDecryptionModalPreview() }
-        compose.onRoot().assertExists()
+        compose.onAllNodes(isRoot())[0].assertExists()
     }
 }

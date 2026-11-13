@@ -98,6 +98,12 @@ object OvNative {
     /** Generate a new key pair and return its fingerprint. */
     external fun nativeGenerateKey(userId: String): String?
 
+    /** The keys of the keyring, as a JSON document. */
+    external fun nativeListKeys(): String?
+
+    /** Go forward in the history of the browser. */
+    external fun nativeGoForward(): Boolean
+
     /** Export the armored public key of a fingerprint. */
     external fun nativeExportPublicKey(fingerprint: String): String?
 

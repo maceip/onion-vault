@@ -20,6 +20,7 @@ import dev.onionvault.ui.BrowserScreen
 import dev.onionvault.ui.BrowserUiState
 import dev.onionvault.ui.CircuitHop
 import dev.onionvault.ui.CircuitState
+import dev.onionvault.ui.KeyInfo
 import dev.onionvault.ui.OnionBackStackManager
 import dev.onionvault.ui.PgpFieldState
 import dev.onionvault.ui.PgpOverlayState
@@ -94,6 +95,11 @@ class MainActivity : FragmentActivity(), OvBridge.Listener {
                 onInsertPlaintext = { insertPlaintext(it) },
                 onReloadLive = { reloadLive() },
                 onBack = { goBack() },
+                onForward = { goForward() },
+                onReload = { reloadLive() },
+                onNewTab = { newTab() },
+                onCreateKey = { createKey() },
+                onExportKey = { exportKey(it) },
                 surface = {
                     AndroidView(
                         factory = { context ->
@@ -104,6 +110,9 @@ class MainActivity : FragmentActivity(), OvBridge.Listener {
                 },
             )
         }
+
+        // The keys of the keyring are shown by the key manager.
+        refreshKeys()
 
         // The first page: the start page of the application.
         val start = savedInstanceState?.getString(STATE_URL) ?: getString(R.string.start_url)
@@ -164,6 +173,88 @@ class MainActivity : FragmentActivity(), OvBridge.Listener {
             canGoBack = backStack.canGoBack,
             backPreview = backStack.previewState(),
         )
+    }
+
+    /** Go forward to the next page of the history. */
+    private fun goForward() {
+        if (OvNative.nativeGoForward()) {
+            backStack.refresh()
+            uiState = uiState.copy(
+                canGoBack = backStack.canGoBack,
+                backPreview = backStack.previewState(),
+            )
+        }
+    }
+
+    /** Open the start page in a new tab. */
+    private fun newTab() {
+        navigate(getString(R.string.start_url))
+    }
+
+    /**
+     * Create a new key pair in the keyring.
+     *
+     * The user id carries a short suffix, so that two keys of the same
+     * device can be told apart.
+     */
+    private fun createKey() {
+        if (requireUserAuthentication()) {
+            confirmWithBiometrics(getString(R.string.authenticate_for_key)) {
+                generateKey()
+            }
+            return
+        }
+        generateKey()
+    }
+
+    /** Generate the key and tell the user its fingerprint. */
+    private fun generateKey() {
+        val suffix = java.util.UUID.randomUUID().toString().take(8)
+        val fingerprint = OvNative.nativeGenerateKey("OnionVault <$suffix@example.onion>")
+        if (fingerprint.isNullOrEmpty()) {
+            showError(getString(R.string.key_failed))
+            return
+        }
+        refreshKeys()
+        Toast.makeText(
+            this,
+            getString(R.string.key_created, fingerprint.takeLast(16)),
+            Toast.LENGTH_LONG,
+        ).show()
+    }
+
+    /** Copy the public key of a certificate into the clipboard. */
+    private fun exportKey(fingerprint: String) {
+        val armored = OvNative.nativeExportPublicKey(fingerprint)
+        if (armored.isNullOrEmpty()) {
+            showError(getString(R.string.key_failed))
+            return
+        }
+        val clipboard = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        clipboard.setPrimaryClip(
+            android.content.ClipData.newPlainText("OnionVault public key", armored),
+        )
+        Toast.makeText(this, getString(R.string.key_copied), Toast.LENGTH_SHORT).show()
+    }
+
+    /** Read the keys of the keyring into the state of the screen. */
+    private fun refreshKeys() {
+        val json = OvNative.nativeListKeys() ?: return
+        val keys = try {
+            val array = JSONObject(json).optJSONArray("keys") ?: return
+            (0 until array.length()).mapNotNull { index ->
+                val entry = array.optJSONObject(index) ?: return@mapNotNull null
+                KeyInfo(
+                    fingerprint = entry.optString("fingerprint", ""),
+                    userId = entry.optString("userId", ""),
+                    hasSecret = entry.optBoolean("hasSecret", false),
+                )
+            }
+        } catch (error: Throwable) {
+            Log.w(TAG, "cannot read the key list", error)
+            return
+        }
+        uiState = uiState.copy(keys = keys)
     }
 
     /** The user tapped a PGP action chip. */
