@@ -460,7 +460,7 @@ fn signature_key_id(signature: &openpgp::packet::Signature) -> KeyID {
     signature
         .get_issuers()
         .first()
-        .map(|handle| key_id_of(handle))
+        .map(key_id_of)
         .unwrap_or_else(KeyID::wildcard)
 }
 

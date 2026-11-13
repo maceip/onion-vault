@@ -311,12 +311,10 @@ fn walk(
             || kinds.contains(&FieldKind::PgpPublicKey);
     }
 
-    let mut index = 0usize;
-    for child in &node.children {
+    for (index, child) in node.children.iter().enumerate() {
         path.push(index);
         walk(child, path, depth + 1, child_inside, found);
         path.pop();
-        index += 1;
     }
 }
 

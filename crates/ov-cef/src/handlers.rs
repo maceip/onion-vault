@@ -9,6 +9,11 @@
 //!   prevention: in strict hidden service mode every clearnet request is
 //!   cancelled and the identifying headers are stripped.
 
+// The callbacks of CEF have the signature that the framework dictates,
+// and the macros of cef-rs generate a constructor with one parameter
+// per field of the handler; both can carry more than seven parameters.
+#![allow(clippy::too_many_arguments)]
+
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
@@ -403,6 +408,13 @@ wrap_render_handler! {
         }
 
         /// A frame was rendered.
+        ///
+        /// The buffer is a raw pointer because that is the signature of the
+        /// CEF callback; CEF owns the memory and guarantees that it holds
+        /// `width * height` pixels of four bytes each for the duration of
+        /// the call. The callback cannot be `unsafe` because the trait of
+        /// cef-rs declares it as a safe function, hence the allowance.
+        #[allow(clippy::not_unsafe_ptr_arg_deref)]
         fn on_paint(
             &self,
             browser: Option<&mut Browser>,

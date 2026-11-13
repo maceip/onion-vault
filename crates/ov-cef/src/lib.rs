@@ -50,25 +50,26 @@ pub use snapshot::{FrameSnapshot, PageSnapshot, SnapshotCollector, MAX_DEPTH};
 /// switches remove the features that a hidden service could abuse to
 /// fingerprint the device or to open a path around the Tor tunnel.
 pub fn browser_settings() -> BrowserSettings {
-    let mut settings = BrowserSettings::default();
+    BrowserSettings {
+        // --- the zero JavaScript guarantee -------------------------------
+        javascript: State::DISABLED,
+        javascript_close_windows: State::DISABLED,
+        javascript_access_clipboard: State::DISABLED,
+        javascript_dom_paste: State::DISABLED,
 
-    // --- the zero JavaScript guarantee -----------------------------------
-    settings.javascript = State::DISABLED;
-    settings.javascript_close_windows = State::DISABLED;
-    settings.javascript_access_clipboard = State::DISABLED;
-    settings.javascript_dom_paste = State::DISABLED;
+        // --- features that would leak or that are not needed --------------
+        databases_deprecated: State::DISABLED,
+        webgl: State::DISABLED,
+        local_storage: State::DISABLED,
+        // Remote fonts would tell the hidden service which fonts the
+        // device has.
+        remote_fonts: State::DISABLED,
 
-    // --- features that would leak or that are not needed ------------------
-    settings.databases_deprecated = State::DISABLED;
-    settings.webgl = State::DISABLED;
-    settings.local_storage = State::DISABLED;
-    // Remote fonts would tell the hidden service which fonts the device has.
-    settings.remote_fonts = State::DISABLED;
+        // Images are needed, the pages of hidden services are mostly images.
+        image_loading: State::ENABLED,
 
-    // Images are needed, the pages of hidden services are mostly images.
-    settings.image_loading = State::ENABLED;
-
-    settings
+        ..Default::default()
+    }
 }
 
 /// The CEF settings of OnionVault.
@@ -81,17 +82,19 @@ pub fn cef_settings(
     cache_dir: Option<&Path>,
     external_message_pump: bool,
 ) -> Settings {
-    let mut settings = Settings::default();
-
-    // Off-screen rendering: CEF paints into a memory buffer.
-    settings.windowless_rendering_enabled = 1;
-    // OnionVault runs its own Tokio runtime; CEF must not install a message
-    // pump of its own.
-    settings.multi_threaded_message_loop = 0;
-    // On Android the message loop of the platform is driven by the native
-    // UI (see `MainActivity.kt`), CEF must not install one of its own.
-    settings.external_message_pump = if external_message_pump { 1 } else { 0 };
-    settings.log_severity = LogSeverity::WARNING;
+    let mut settings = Settings {
+        // Off-screen rendering: CEF paints into a memory buffer.
+        windowless_rendering_enabled: 1,
+        // OnionVault runs its own Tokio runtime; CEF must not install a
+        // message pump of its own.
+        multi_threaded_message_loop: 0,
+        // On Android the message loop of the platform is driven by the
+        // native UI (see `MainActivity.kt`), CEF must not install one of its
+        // own.
+        external_message_pump: if external_message_pump { 1 } else { 0 },
+        log_severity: LogSeverity::WARNING,
+        ..Default::default()
+    };
 
     if let Some(dir) = resources_dir {
         settings.resources_dir_path = CefString::from(path_to_str(dir));
@@ -108,18 +111,19 @@ pub fn cef_settings(
 
 /// The window information of a windowless browser.
 pub fn window_info(width: i32, height: i32) -> WindowInfo {
-    let mut info = WindowInfo::default();
-    info.windowless_rendering_enabled = 1;
-    info.bounds = Rect {
-        x: 0,
-        y: 0,
-        width,
-        height,
-    };
-    // "Alloy" does not draw the browser chrome, which the native UI draws
-    // itself.
-    info.runtime_style = RuntimeStyle::ALLOY;
-    info
+    WindowInfo {
+        windowless_rendering_enabled: 1,
+        bounds: Rect {
+            x: 0,
+            y: 0,
+            width,
+            height,
+        },
+        // "Alloy" does not draw the browser chrome, which the native UI
+        // draws itself.
+        runtime_style: RuntimeStyle::ALLOY,
+        ..Default::default()
+    }
 }
 
 /// Build the CEF application and the browser client.

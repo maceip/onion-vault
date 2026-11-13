@@ -207,7 +207,9 @@ impl Engine {
     /// Stop the engine.
     pub fn shutdown(&self) {
         if let Some(browser) = self.state.browser() {
-            browser.host().map(|host| host.close_browser(1));
+            if let Some(host) = browser.host() {
+                host.close_browser(1);
+            }
         }
         self.state.tor.shutdown();
     }
@@ -220,7 +222,7 @@ impl Engine {
 fn build_main_args() -> cef::MainArgs {
     use std::{ffi::CString, os::raw::c_char};
 
-    let mut argv = vec![CString::new("onionvault").expect("valid program name")];
+    let mut argv = [CString::new("onionvault").expect("valid program name")];
     let mut pointers: Vec<*mut c_char> = argv
         .iter_mut()
         .map(|value| value.as_ptr() as *mut c_char)
