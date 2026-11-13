@@ -1,5 +1,8 @@
 # OnionVault
 
+[![CI & Release](https://github.com/maceip/onion-vault/actions/workflows/ci-release.yml/badge.svg)](https://github.com/maceip/onion-vault/actions/workflows/ci-release.yml)
+[![Licence](https://img.shields.io/badge/licence-Apache--2.0%20OR%20MIT-blue.svg)](LICENSE)
+
 OnionVault is an Android browser that routes every request through an
 embedded Tor client, runs with **JavaScript switched off completely** and
 implements OpenPGP natively in Rust — no WebAssembly, no content scripts, no
@@ -430,4 +433,5 @@ real CEF headers and bindings without the engine.
 ## Licence
 
 Apache-2.0 OR MIT — the texts are in [`LICENSE-APACHE`](LICENSE-APACHE) and
-[`LICENSE-MIT`](LICENSE-MIT).
+[`LICENSE-MIT`](LICENSE-MIT). The dependencies keep their own licences, which
+are listed in [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
