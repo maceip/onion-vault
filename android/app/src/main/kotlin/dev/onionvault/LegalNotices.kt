@@ -23,6 +23,9 @@ object LegalNotices {
     /** The directory of the assets that holds the documents. */
     private const val DIRECTORY = "licenses"
 
+    /** The size of a block of text, in characters. */
+    private const val BLOCK_SIZE = 4096
+
     /**
      * The titles of the documents that the application knows.
      *
@@ -59,18 +62,31 @@ object LegalNotices {
     }
 
     /**
-     * The lines of a document.
+     * The text of a document, in blocks.
      *
-     * The lines are returned separately, so that the interface can show them
-     * in a list that only builds the visible rows: the notice of the engine
-     * has tens of thousands of lines.
+     * The notice of the engine is 2.2 MiB long and has tens of thousands of
+     * lines.  The text is therefore split into blocks of a few kilobytes, at
+     * the end of a line, so that the reader does not have to keep one string
+     * per line in memory and the list of the interface stays short.
      *
      * @param context the context of the application.
      * @param name the file name of the document.
      */
     fun read(context: Context, name: String): List<String> = try {
         context.assets.open("$DIRECTORY/$name").use { stream ->
-            stream.bufferedReader().readLines()
+            val blocks = ArrayList<String>()
+            val block = StringBuilder()
+            stream.bufferedReader().forEachLine { line ->
+                block.append(line).append('\n')
+                if (block.length >= BLOCK_SIZE) {
+                    blocks.add(block.toString())
+                    block.setLength(0)
+                }
+            }
+            if (block.isNotEmpty()) {
+                blocks.add(block.toString())
+            }
+            blocks
         }
     } catch (error: IOException) {
         Log.w(TAG, "cannot read the licence document $name", error)

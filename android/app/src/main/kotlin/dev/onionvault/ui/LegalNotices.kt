@@ -148,8 +148,8 @@ private fun DocumentRow(document: LegalDocument, onClick: () -> Unit) {
 /**
  * The text of a licence document.
  *
- * The text of the notice of the engine has tens of thousands of lines; they
- * are shown in a list that only builds the visible rows.
+ * The text of the notice of the engine is 2.2 MiB long; it is read in blocks
+ * of a few kilobytes and shown in a list that only builds the visible rows.
  *
  * @param document the document that is read.
  * @param loadLines the function that reads the document.
@@ -203,9 +203,9 @@ fun LegalDocumentDialog(
                         .weight(1f, fill = false),
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
-                    items(content) { line ->
+                    items(content) { block ->
                         Text(
-                            text = line,
+                            text = block,
                             color = OnionPalette.TextPrimary,
                             fontSize = 11.sp,
                             fontFamily = FontFamily.Monospace,

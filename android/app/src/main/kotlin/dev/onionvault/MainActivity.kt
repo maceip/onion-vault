@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.Choreographer
 import android.widget.Toast
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -27,6 +28,8 @@ import dev.onionvault.ui.PgpOverlayState
 import dev.onionvault.ui.PgpPlaintextState
 import dev.onionvault.ui.TorBootstrapState
 import dev.onionvault.ui.parseFields
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
 /**
@@ -88,6 +91,16 @@ class MainActivity : FragmentActivity(), OvBridge.Listener {
         }
 
         setContent {
+            // The licences that travel with the application are shown by the
+            // button of the licences.  They are measured on a worker thread:
+            // the notice of the engine is 2.2 MiB long.
+            LaunchedEffect(Unit) {
+                val documents = withContext(Dispatchers.IO) {
+                    LegalNotices.list(this@MainActivity)
+                }
+                uiState = uiState.copy(legalDocuments = documents)
+            }
+
             BrowserScreen(
                 state = uiState,
                 onNavigate = { navigate(it) },
@@ -114,10 +127,6 @@ class MainActivity : FragmentActivity(), OvBridge.Listener {
 
         // The keys of the keyring are shown by the key manager.
         refreshKeys()
-
-        // The licences that travel with the application are shown by the
-        // button of the licences.
-        uiState = uiState.copy(legalDocuments = LegalNotices.list(this))
 
         // The first page: the start page of the application.
         val start = savedInstanceState?.getString(STATE_URL) ?: getString(R.string.start_url)
