@@ -157,8 +157,22 @@ jobs:
             android/settings.gradle.kts
             android/gradle/wrapper/gradle-wrapper.properties
 
-      - name: Set up the Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Put the SDK tools on the path
+        # The image of the runner already carries the Android SDK; the
+        # command line tools are only added to the path here, because the
+        # `android-actions/setup-android` action installs the `tools`
+        # package that Google removed from the repository and therefore
+        # fails with "Failed to find package 'tools'".
+        run: |
+          set -euo pipefail
+          sdk_root="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          sdkmanager="$(find "${sdk_root}/cmdline-tools" -type f -name sdkmanager 2>/dev/null | sort | tail -n 1)"
+          if [ -z "${sdkmanager}" ]; then
+            echo "::error::sdkmanager was not found in ${sdk_root}/cmdline-tools"
+            exit 1
+          fi
+          echo "$(dirname "${sdkmanager}")" >> "$GITHUB_PATH"
+          echo "The command line tools of the SDK are ${sdkmanager}."
 
       - name: Install the Android SDK packages
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0" "platform-tools"
@@ -175,10 +189,24 @@ jobs:
           set +o pipefail
           yes | sdkmanager --licenses > /dev/null
 
-      - name: Export the Android NDK location
+      - name: Export the Android NDK location and its toolchain
+        # `cc` does not find the compiler of the NDK on its own: without
+        # these variables the build of `rusqlite` (the bundled SQLite is
+        # compiled from C source) stops with "failed to find tool
+        # aarch64-linux-android-clang".  The API level 29 is the one of the
+        # `minSdk` of the application.
         run: |
-          echo "ANDROID_NDK_HOME=${ANDROID_SDK_ROOT}/ndk/27.2.12479018" >> "$GITHUB_ENV"
-          echo "ANDROID_NDK_ROOT=${ANDROID_SDK_ROOT}/ndk/27.2.12479018" >> "$GITHUB_ENV"
+          set -euo pipefail
+          sdk_root="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          ndk_root="${sdk_root}/ndk/27.2.12479018"
+          ndk_bin="${ndk_root}/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          echo "ANDROID_NDK_HOME=${ndk_root}" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_ROOT=${ndk_root}" >> "$GITHUB_ENV"
+          echo "CC_aarch64_linux_android=${ndk_bin}/aarch64-linux-android29-clang" >> "$GITHUB_ENV"
+          echo "CXX_aarch64_linux_android=${ndk_bin}/aarch64-linux-android29-clang++" >> "$GITHUB_ENV"
+          echo "AR_aarch64_linux_android=${ndk_bin}/llvm-ar" >> "$GITHUB_ENV"
+          echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=${ndk_bin}/aarch64-linux-android29-clang" >> "$GITHUB_ENV"
+          ls -la "${ndk_bin}/aarch64-linux-android29-clang"
 
       - name: Prepare the Gradle wrapper
         run: chmod +x android/gradlew
