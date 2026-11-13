@@ -20,7 +20,7 @@ untouched.
 
 | component | origin | licence |
 |---|---|---|
-| Chromium Embedded Framework | [Chromium Embedded Framework](https://github.com/chromiumembedded/cef) 156.0.26, via the Android port [cefrium/cef-android](https://codeberg.org/cefrium/cef-android) 0.18.0 | BSD-3-Clause |
+| Chromium Embedded Framework | [Chromium Embedded Framework](https://github.com/chromiumembedded/cef) 156.0.26, via the Android port [cefrium/cef-android](https://codeberg.org/cefrium/cef-android) 0.19.0 (Chromium 156.0.8078.80) | LGPL-3.0-or-later (the port), BSD-3-Clause (the upstream CEF and Chromium) |
 | sequoia-openpgp | [sequoia-pgp/sequoia-openpgp](https://gitlab.com/sequoia-pgp/sequoia-openpgp) 1.22 | LGPL-2.0-or-later |
 | arti-client, tor-rtcompat | [artifacts.gitlab.torproject.org/tpo/core/arti](https://gitlab.torproject.org/tpo/core/arti) 0.47 | MIT OR Apache-2.0 |
 | rustls | [rustls/rustls](https://github.com/rustls/rustls) | Apache-2.0 OR ISC OR MIT |
@@ -33,6 +33,19 @@ sources of `sequoia-openpgp` and of the other dependencies are published by
 their authors under the licences above; the complete corresponding source of
 the LGPL component is available from its repository and from the crates.io
 release that the lock file pins.
+
+`sequoia-openpgp` is LGPL-2.0-or-later and is linked into the native library
+of the application.  The complete corresponding source of it is the content
+of this repository together with the crates that the lock file pins, so that
+the native library can be rebuilt and relinked; the build script of the
+application (`build.rs` and the crates of `crates/`) is part of it.
+
+The engine of Cefrium (LGPL-3.0-or-later) is loaded as a shared library at
+run time and can be replaced by the user of the application.  Its sources
+are published at <https://codeberg.org/cefrium/cef-android>, its notices
+travel with the release as `cefrium-sdk-0.19.0-NOTICE.txt`, and the
+continuous integration verifies the checksum of the download before it links
+against it.
 
 The artwork of the launcher icon and of the interface was made for OnionVault
 and is covered by the licence of this repository.

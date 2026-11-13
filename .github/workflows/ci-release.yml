@@ -236,18 +236,23 @@ jobs:
 
       - name: Download the CEF runtime for Android
         # Cefrium is the port of CEF to `aarch64-linux-android`; release
-        # 0.18.0 is built on Chromium 156, the Chromium release of the CEF
-        # 156 bindings of this project.  The engine is inside the release
-        # APK of the project; it is unpacked into the sysroot that the
-        # build scripts expect.
+        # 0.19.0 is built on Chromium 156.0.8078.80, the Chromium release of
+        # the CEF 156 bindings of this project.  The engine is inside the SDK
+        # of the release and is unpacked into the sysroot that the build
+        # scripts expect.
+        #
+        # The checksum is the one of the release; a download that differs
+        # from it stops the build instead of being linked against.
         run: |
           set -euo pipefail
           mkdir -p cef-runtime
-          curl -sSL --retry 3 --retry-delay 5 -o cef-runtime/cefrium.apk \
-            "https://codeberg.org/cefrium/cef-android/releases/download/v0.18.0/cefrium-browser-0.18.0-debug.apk"
-          unzip -q cef-runtime/cefrium.apk 'lib/arm64-v8a/libcef.so' 'assets/*' -d cef-runtime/unpacked
+          curl -sSL --retry 3 --retry-delay 5 -o cef-runtime/cefrium-sdk.aar \
+            "https://codeberg.org/cefrium/cef-android/releases/download/v0.19.0/cefrium-sdk-0.19.0.aar"
+          echo "efb3f50dede4485215560455e16836671a7ebae32a35559bcfd4456d6667978b  cef-runtime/cefrium-sdk.aar" \
+            | sha256sum --check --strict -
+          unzip -q cef-runtime/cefrium-sdk.aar 'jni/arm64-v8a/libcef.so' 'assets/*' -d cef-runtime/unpacked
           mkdir -p "${CEF_ANDROID_ROOT}/lib" "${CEF_ANDROID_ROOT}/locales"
-          cp cef-runtime/unpacked/lib/arm64-v8a/libcef.so "${CEF_ANDROID_ROOT}/lib/"
+          cp cef-runtime/unpacked/jni/arm64-v8a/libcef.so "${CEF_ANDROID_ROOT}/lib/"
           # The asset manager renames the resource files; the original names
           # are restored, because Chromium reads them by name.
           for file in cef-runtime/unpacked/assets/*.pak* cef-runtime/unpacked/assets/icudtl.dat*; do

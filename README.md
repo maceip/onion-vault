@@ -242,23 +242,38 @@ are patched copies that
 CEF itself publishes binary distributions for Windows, Linux and macOS only;
 there is no official Android build.  The engine for OnionVault comes from
 [Cefrium](https://codeberg.org/cefrium/cef-android), the port of CEF to
-`aarch64-linux-android`; its release 0.18.0 is built on Chromium 156, the
-same Chromium release that the CEF 156 bindings of this project expect.
+`aarch64-linux-android`; its release 0.19.0 is built on Chromium
+156.0.8078.80, the same Chromium release that the CEF 156 bindings of this
+project expect.  The engine is inside the SDK of the release:
 
 ```sh
-# The engine of the APK: the shared object and the resource files.
-curl -L -o cefrium.apk \
-  https://codeberg.org/cefrium/cef-android/releases/download/v0.18.0/cefrium-browser-0.18.0-debug.apk
-unzip -q cefrium.apk 'lib/arm64-v8a/libcef.so' 'assets/*' -d cefrium
+# The SDK of the release: the shared object and the resource files.
+curl -L -o cefrium-sdk.aar \
+  https://codeberg.org/cefrium/cef-android/releases/download/v0.19.0/cefrium-sdk-0.19.0.aar
+echo "efb3f50dede4485215560455e16836671a7ebae32a35559bcfd4456d6667978b  cefrium-sdk.aar" \
+  | sha256sum --check --strict -
+unzip -q cefrium-sdk.aar 'jni/arm64-v8a/libcef.so' 'assets/*' -d cefrium
 
 export CEF_ANDROID_ROOT=$PWD/cef-root
 mkdir -p "$CEF_ANDROID_ROOT/lib" "$CEF_ANDROID_ROOT/locales"
-cp cefrium/lib/arm64-v8a/libcef.so "$CEF_ANDROID_ROOT/lib/"
+cp cefrium/jni/arm64-v8a/libcef.so "$CEF_ANDROID_ROOT/lib/"
 for file in cefrium/assets/*.pak* cefrium/assets/icudtl.dat*; do
     cp "$file" "$CEF_ANDROID_ROOT/$(basename "${file%+com.cefrium+}")"
 done
 cp cefrium/assets/stored-locales/en-US.pak* "$CEF_ANDROID_ROOT/locales/en-US.pak"
 ```
+
+The checksum is the one that the release publishes in `SHA256SUMS-0.19.0`;
+the continuous integration verifies it before it links against the engine.
+
+The engine of Cefrium is free software under the **LGPL-3.0-or-later**, and
+the upstream Chromium Embedded Framework under the BSD-3-Clause.  The engine
+is a shared library: it is loaded at run time and can be replaced by the
+user of the application.  The sources of Cefrium are published at
+<https://codeberg.org/cefrium/cef-android> and the notices of the engine
+travel with the release
+(`cefrium-sdk-0.19.0-NOTICE.txt`); the third party dependencies of OnionVault
+are listed in [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
 
 The sysroot has to provide the shared object and the resource files; the C++
 wrapper is optional, because a distribution that ships one self-contained
