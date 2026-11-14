@@ -55,11 +55,10 @@ LAUNCHER_DP = 48
 
 # The wordmark of the lockup.
 WORDMARK = "PlugTalk"
-FONT_CANDIDATES = (
-    "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-)
+# The font of the wordmark.  It is a subset of DejaVu Sans Bold that carries
+# the glyphs of the wordmark only; it is part of the repository, so that the
+# lockup is the same on every machine and the check cannot drift.
+FONT = HERE / "fonts" / "PlugTalk-Bold.ttf"
 
 
 # ---------------------------------------------------------------- extraction
@@ -264,10 +263,10 @@ def monochrome(mark: Image.Image, canvas: int) -> Image.Image:
 
 
 def _font(size: int) -> ImageFont.FreeTypeFont:
-    for candidate in FONT_CANDIDATES:
-        if Path(candidate).exists():
-            return ImageFont.truetype(candidate, size)
-    return ImageFont.load_default()
+    """The font of the wordmark: the subset that is part of the repository."""
+    if not FONT.exists():
+        raise SystemExit(f"the font of the wordmark is missing: {FONT}")
+    return ImageFont.truetype(str(FONT), size)
 
 
 def lockup_png(mark: Image.Image, width: int = 1024) -> Image.Image:
@@ -298,6 +297,7 @@ def lockup_svg(mark: Image.Image) -> str:
     buffer = io.BytesIO()
     icon.save(buffer, format="PNG", optimize=True)
     encoded = base64.b64encode(buffer.getvalue()).decode("ascii")
+    font = base64.b64encode(FONT.read_bytes()).decode("ascii")
     return f"""<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
      width="1024" height="256" viewBox="0 0 1024 256">
@@ -311,14 +311,20 @@ def lockup_svg(mark: Image.Image) -> str:
     <clipPath id="round">
       <rect x="0" y="0" width="256" height="256" rx="58"/>
     </clipPath>
+    <style>
+      @font-face {{
+        font-family: "PlugTalk";
+        src: url("data:font/ttf;base64,{font}") format("truetype");
+      }}
+      .wordmark {{ font-family: "PlugTalk", sans-serif; font-weight: bold; }}
+    </style>
   </defs>
   <g clip-path="url(#round)">
     <rect x="0" y="0" width="256" height="256" fill="url(#brand)"/>
     <image x="0" y="0" width="256" height="256"
            xlink:href="data:image/png;base64,{encoded}"/>
   </g>
-  <text x="296" y="166" font-family="Liberation Sans, DejaVu Sans, sans-serif"
-        font-size="102" font-weight="bold" fill="#14110E">{WORDMARK}</text>
+  <text x="296" y="166" class="wordmark" font-size="102" fill="#14110E">{WORDMARK}</text>
 </svg>
 """
 

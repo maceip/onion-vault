@@ -43,5 +43,10 @@ The mark is then placed on the gradient of the brand: teal `#1DE5C2` at the top
 left, cyan `#16C2CF` in the middle and deep blue `#10A1D8` at the bottom
 right, the same three stops as the adaptive icon.
 
-The wordmark is set in a system sans; outline the text before it is used for
-anything that has to look exactly the same everywhere.
+The wordmark is set in the subset of DejaVu Sans Bold that is part of the
+repository (`fonts/PlugTalk-Bold.ttf`); it carries the glyphs of the wordmark
+only, so that the lockup is the same on every machine and the check cannot
+drift.  The licence of the font is next to it
+(`fonts/LICENSE-DejaVu.txt`).  The vector lockup embeds the font, so it
+renders the same everywhere; outline the text before it is used for anything
+that has to look exactly the same everywhere.
