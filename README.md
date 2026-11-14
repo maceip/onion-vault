@@ -26,6 +26,29 @@ onion-vault/
 └── android/                the Gradle project (Kotlin, package `dev.onionvault`)
 ```
 
+## Downloads
+
+Every push of the pipeline publishes a tagged release with the debug APK and
+with the full text of every licence that applies to a component.  The links
+below always point at the newest build:
+
+| file | what it is |
+|---|---|
+| [`app-debug.apk`](https://github.com/maceip/onion-vault/releases/latest/download/app-debug.apk) | the debug APK of the newest build (arm64-v8a, API 29 and later) |
+| [`LGPL-3.0.txt`](https://github.com/maceip/onion-vault/releases/latest/download/LGPL-3.0.txt) | the licence of the CEF engine, with the GPL-3.0 that it incorporates |
+| [`GPL-3.0.txt`](https://github.com/maceip/onion-vault/releases/latest/download/GPL-3.0.txt) | the GNU GPL on its own |
+| [`LGPL-2.1.txt`](https://github.com/maceip/onion-vault/releases/latest/download/LGPL-2.1.txt) | the licence of sequoia-openpgp |
+| [`CEFRIUM-NOTICE.txt`](https://github.com/maceip/onion-vault/releases/latest/download/CEFRIUM-NOTICE.txt) | the notice of the engine, with the licences of the Chromium sources |
+| [`SHA256SUMS.txt`](https://github.com/maceip/onion-vault/releases/latest/download/SHA256SUMS.txt) | the checksums of the licence documents |
+
+The list of every release is at
+<https://github.com/maceip/onion-vault/releases>; the checksum of the APK is
+written into the notes of each release.
+
+The licences are inside the APK as well, under `assets/licenses/`, where the
+application shows them: the button of the book in the upper bar opens the
+list of the documents.
+
 ## Security properties
 
 | property | how it is enforced |
