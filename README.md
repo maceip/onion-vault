@@ -174,8 +174,6 @@ predictive back gesture is handed to the application instead of the system.
 ## The identity of Trap
 <img width="941" alt="TRAP Neon Graffiti Browser Board" src="https://github.com/user-attachments/assets/6abb9081-4752-459c-87be-b2c2ba791959" />
 
-<img width="941" alt="TRAP Neon Graffiti Browser Board" src="https://github.com/user-attachments/assets/6abb9081-4752-459c-87be-b2c2ba791959" />
-
 The interface is painted with the **TRAP Neon Graffiti Browser Board** — the
 design board of the application.  The board carries the icon system, the
 components of the chrome and the brand palette; the neon glyphs of the
