@@ -33,7 +33,7 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
 /**
- * The user interface of PlugTalk.
+ * The user interface of Trap.
  *
  * The activity owns
  *
@@ -50,7 +50,7 @@ import org.json.JSONObject
 class MainActivity : FragmentActivity(), OvBridge.Listener {
 
     private companion object {
-        const val TAG = "PlugTalk"
+        const val TAG = "Trap"
         const val STATE_URL = "url"
     }
 
@@ -224,7 +224,7 @@ class MainActivity : FragmentActivity(), OvBridge.Listener {
     /** Generate the key and tell the user its fingerprint. */
     private fun generateKey() {
         val suffix = java.util.UUID.randomUUID().toString().take(8)
-        val fingerprint = OvNative.nativeGenerateKey("PlugTalk <$suffix@example.onion>")
+        val fingerprint = OvNative.nativeGenerateKey("Trap <$suffix@example.onion>")
         if (fingerprint.isNullOrEmpty()) {
             showError(getString(R.string.key_failed))
             return
@@ -246,7 +246,7 @@ class MainActivity : FragmentActivity(), OvBridge.Listener {
         }
         val clipboard = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
         clipboard.setPrimaryClip(
-            android.content.ClipData.newPlainText("PlugTalk public key", armored),
+            android.content.ClipData.newPlainText("Trap public key", armored),
         )
         Toast.makeText(this, getString(R.string.key_copied), Toast.LENGTH_SHORT).show()
     }

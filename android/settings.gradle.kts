@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "PlugTalk"
+rootProject.name = "Trap"
 include(":app")

@@ -4,11 +4,11 @@ Upstream-Author: Stepan Roh <src@users.sourceforge.net> (original author),
                   see /usr/share/doc/fonts-dejavu-core/AUTHORS for full list
 Source: https://dejavu-fonts.github.io/
 
-Files: PlugTalk-Bold.ttf
+Files: Trap-Bold.ttf
 Copyright: Copyright (c) 2003 by Bitstream, Inc. All Rights Reserved.
  DejaVu changes are in public domain.
  The file is a subset of DejaVu Sans Bold that carries
- the glyphs of the wordmark "PlugTalk" only.
+ the glyphs of the wordmark "Trap" only.
 
 Files: *
 Copyright: Copyright (c) 2003 by Bitstream, Inc. All Rights Reserved. 

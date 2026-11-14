@@ -3,7 +3,7 @@ package dev.onionvault.ui
 import androidx.compose.ui.graphics.Color
 
 /**
- * The colours of PlugTalk.
+ * The colours of Trap.
  *
  * They are taken from the artwork of the application: the teal of the badge
  * is the primary colour, the amber of the skin of the onion is the secondary

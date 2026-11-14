@@ -1,4 +1,4 @@
-//! PlugTalk: a zero-JavaScript mobile browser for Android.
+//! Trap: a zero-JavaScript mobile browser for Android.
 //!
 //! The crate is the shared library of the Android application; it is loaded
 //! by `dev.onionvault.MainActivity` and by the CEF subprocess services.

@@ -1,6 +1,6 @@
 //! The native DOM PGP engine.
 //!
-//! PlugTalk runs with JavaScript disabled, so the PGP functionality cannot
+//! Trap runs with JavaScript disabled, so the PGP functionality cannot
 //! be implemented with an injected content script.  Instead the render
 //! process walks Blink's DOM directly through the CEF DOM API
 //! (`CefDOMVisitor` / `CefDOMNode`):
@@ -63,7 +63,7 @@ pub use crate::dom_model::STYLE_FOCUSED;
 pub use crate::dom_model::STYLE_PGP_MESSAGE;
 /// Style of a detected PGP public key.
 pub use crate::dom_model::STYLE_PGP_PUBLIC_KEY;
-/// Style of a field whose content was encrypted or decrypted by PlugTalk.
+/// Style of a field whose content was encrypted or decrypted by Trap.
 pub use crate::dom_model::STYLE_VERIFIED;
 
 /// Marker of an armored PGP message.

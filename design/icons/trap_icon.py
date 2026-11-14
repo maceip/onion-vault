@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Generate every PlugTalk icon lockup from one piece of artwork.
+"""Generate every Trap icon lockup from one piece of artwork.
 
-    python3 design/icons/plugtalk_icon.py           # write the files
-    python3 design/icons/plugtalk_icon.py --check   # fail when they drifted
+    python3 design/icons/trap_icon.py           # write the files
+    python3 design/icons/trap_icon.py --check   # fail when they drifted
 
-The artwork in `src/plugtalk-onion.png` is the single source: a smiling onion
+The artwork in `src/trap-onion.png` is the single source: a smiling onion
 on a teal badge.  The script cuts the onion out of the badge, and composes it
 on the palette of the brand for every lockup, so the launcher icon, the
 adaptive icon, the themed icon, the store icon and the wordmark can never
@@ -31,11 +31,11 @@ try:
     import numpy as np
     from PIL import Image, ImageDraw, ImageFont
 except ImportError as exc:  # pragma: no cover - the dependency is documented
-    raise SystemExit(f"plugtalk_icon.py needs Pillow and NumPy: {exc}")
+    raise SystemExit(f"trap_icon.py needs Pillow and NumPy: {exc}")
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-SRC = HERE / "src" / "plugtalk-onion.png"
+SRC = HERE / "src" / "trap-onion.png"
 OUT = HERE / "out"
 RES = ROOT / "android" / "app" / "src" / "main" / "res"
 
@@ -54,11 +54,11 @@ ADAPTIVE_DP = 108
 LAUNCHER_DP = 48
 
 # The wordmark of the lockup.
-WORDMARK = "PlugTalk"
+WORDMARK = "Trap"
 # The font of the wordmark.  It is a subset of DejaVu Sans Bold that carries
 # the glyphs of the wordmark only; it is part of the repository, so that the
 # lockup is the same on every machine and the check cannot drift.
-FONT = HERE / "fonts" / "PlugTalk-Bold.ttf"
+FONT = HERE / "fonts" / "Trap-Bold.ttf"
 
 
 # ---------------------------------------------------------------- extraction
@@ -313,10 +313,10 @@ def lockup_svg(mark: Image.Image) -> str:
     </clipPath>
     <style>
       @font-face {{
-        font-family: "PlugTalk";
+        font-family: "Trap";
         src: url("data:font/ttf;base64,{font}") format("truetype");
       }}
-      .wordmark {{ font-family: "PlugTalk", sans-serif; font-weight: bold; }}
+      .wordmark {{ font-family: "Trap", sans-serif; font-weight: bold; }}
     </style>
   </defs>
   <g clip-path="url(#round)">
@@ -331,7 +331,7 @@ def lockup_svg(mark: Image.Image) -> str:
 
 BACKGROUND_XML = """<?xml version="1.0" encoding="utf-8"?>
 <!--
-    The background of the adaptive icon of PlugTalk.
+    The background of the adaptive icon of Trap.
 
     It is the gradient of the badge of the artwork: teal at the top left,
     cyan at the bottom right.
@@ -370,7 +370,7 @@ def render(target_res: Path, target_out: Path) -> dict[Path, bytes]:
         put(path, buffer.getvalue())
 
     # The mark itself, for the about screen of the application.
-    put_png(target_res / "drawable-nodpi" / "ov_plugtalk_mark.png", mark)
+    put_png(target_res / "drawable-nodpi" / "ov_trap_mark.png", mark)
 
     for density, factor in DENSITIES.items():
         launcher = int(round(LAUNCHER_DP * factor))
@@ -397,8 +397,8 @@ def render(target_res: Path, target_out: Path) -> dict[Path, bytes]:
     # The store icon of the listing, and the wordmark of the documentation.
     for size in (512, 1024):
         put_png(target_out / f"play-store-{size}.png", hero_icon(mark, size))
-    put_png(target_out / "plugtalk-lockup.png", lockup_png(mark))
-    put(target_out / "plugtalk-lockup.svg", lockup_svg(mark).encode())
+    put_png(target_out / "trap-lockup.png", lockup_png(mark))
+    put(target_out / "trap-lockup.svg", lockup_svg(mark).encode())
 
     return files
 

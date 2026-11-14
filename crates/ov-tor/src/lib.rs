@@ -1,4 +1,4 @@
-//! Embedded Tor transport for PlugTalk.
+//! Embedded Tor transport for Trap.
 //!
 //! The crate owns a complete Arti client inside the application process:
 //!

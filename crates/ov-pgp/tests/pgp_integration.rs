@@ -1,4 +1,4 @@
-//! Integration tests for the OpenPGP key manager of PlugTalk.
+//! Integration tests for the OpenPGP key manager of Trap.
 //!
 //! The tests prove the three properties the application relies on:
 //!
@@ -242,7 +242,7 @@ fn a_message_encrypted_for_bob_and_signed_by_alice_is_decrypted_and_verified() -
 
     // The plaintext contains a multi byte character, so that the test
     // really compares bytes and not characters.
-    let plaintext = "plugtalk says: 🧅 42\n";
+    let plaintext = "trap says: 🧅 42\n";
     let message = keyring.encrypt_armored(
         plaintext,
         std::slice::from_ref(&fingerprint_bob),

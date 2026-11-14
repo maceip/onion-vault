@@ -18,7 +18,7 @@ import org.robolectric.annotation.Config
 /**
  * The screenshot test of the previews.
  *
- * Every preview of PlugTalk is rendered on the JVM, so that the continuous
+ * Every preview of Trap is rendered on the JVM, so that the continuous
  * integration proves that the screens inflate and that the layout does not
  * break - without an emulator, without a device and without the native
  * browser.

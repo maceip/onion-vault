@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">PlugTalk</string>
+    <string name="app_name">Trap</string>
     <string name="address_hint">onion address</string>
     <string name="go">Go</string>
     <string name="starting">Starting the Tor client…</string>

@@ -1,6 +1,6 @@
 # The licences of the third party components
 
-The full text of every licence that applies to a component of PlugTalk lives
+The full text of every licence that applies to a component of Trap lives
 in this directory.  The files are shipped inside the APK, so that a user of the
 application can read them without leaving it, and they are attached to every
 release of the project.
@@ -46,7 +46,7 @@ into the APK next to these texts.
 ## Why the engine may be replaced
 
 The engine is loaded as a shared library at run time, it is not linked into
-the native library of the application.  A user of PlugTalk can therefore
+the native library of the application.  A user of Trap can therefore
 replace `lib/arm64-v8a/libcef.so` with another build of the same engine, which
 is what the LGPL-3.0 asks for: the work that uses the library has to be
 distributed in a form that allows the library to be replaced.

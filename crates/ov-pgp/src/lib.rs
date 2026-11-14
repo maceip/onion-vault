@@ -1,4 +1,4 @@
-//! Hardware backed OpenPGP key manager for PlugTalk.
+//! Hardware backed OpenPGP key manager for Trap.
 //!
 //! The crate provides a Sequoia (RFC 4880 / RFC 9580) based keyring that
 //!

@@ -39,7 +39,7 @@ import dev.onionvault.ui.PgpPlaintextState
 import dev.onionvault.ui.TorBootstrapState
 
 /**
- * The previews of PlugTalk.
+ * The previews of Trap.
  *
  * Every preview renders the screen from a pure state, without a browser and
  * without the native library: the same code paths are used by the
@@ -291,7 +291,7 @@ fun PgpDecryptionModalPreview() {
                 ),
                 KeyInfo(
                     fingerprint = "A3D9071F5C2E8B40D16F7394C8E5A2B6F04D71C93",
-                    userId = "PlugTalk <7f3c91a2@example.onion>",
+                    userId = "Trap <7f3c91a2@example.onion>",
                     hasSecret = true,
                 ),
             ),
@@ -366,13 +366,13 @@ private fun MockStartPage() {
     ) {
         Spacer(Modifier.height(36.dp))
         Image(
-            painter = painterResource(R.drawable.ov_plugtalk_mark),
-            contentDescription = "PlugTalk",
+            painter = painterResource(R.drawable.ov_trap_mark),
+            contentDescription = "Trap",
             modifier = Modifier.size(96.dp),
         )
         Spacer(Modifier.height(16.dp))
         Text(
-            text = "PlugTalk",
+            text = "Trap",
             color = Previews.Text,
             fontSize = 22.sp,
             fontWeight = FontWeight.SemiBold,
@@ -466,7 +466,7 @@ private fun MockTorTaxiPage() {
  */
 fun chromeState(): BrowserUiState = BrowserUiState(
     url = "about:blank",
-    title = "PlugTalk",
+    title = "Trap",
     tor = TorBootstrapState(
         percent = 100,
         stage = "ready",
@@ -498,7 +498,7 @@ fun torTaxiState(): BrowserUiState = BrowserUiState(
  * The brand bar with the mark, the navigation bar with the address field and
  * the start page of the browser.
  */
-@Preview(name = "6. The Browser Chrome of PlugTalk", heightDp = 640)
+@Preview(name = "6. The Browser Chrome of Trap", heightDp = 640)
 @Composable
 fun BrowserChromePreview() {
     BrowserScreen(

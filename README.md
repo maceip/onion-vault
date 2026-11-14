@@ -1,9 +1,9 @@
-# PlugTalk
+# Trap
 
-[![CI & Release](https://github.com/maceip/plugtalk/actions/workflows/ci-release.yml/badge.svg)](https://github.com/maceip/plugtalk/actions/workflows/ci-release.yml)
+[![CI & Release](https://github.com/maceip/trap/actions/workflows/ci-release.yml/badge.svg)](https://github.com/maceip/trap/actions/workflows/ci-release.yml)
 [![Licence](https://img.shields.io/badge/licence-Apache--2.0%20OR%20MIT-blue.svg)](LICENSE)
 
-PlugTalk is an Android browser that routes every request through an
+Trap is an Android browser that routes every request through an
 embedded Tor client, runs with **JavaScript switched off completely** and
 implements OpenPGP natively in Rust — no WebAssembly, no content scripts, no
 JavaScript at all.
@@ -32,7 +32,7 @@ The names of the directory, of the Cargo packages and of the Kotlin package
 code.  Renaming them would break the JNI symbols, the `applicationId` of the
 APK and the path of the installed application.  Everything the user sees — the
 name of the application, the interface, the icons, the documentation and the
-releases — says **PlugTalk**.
+releases — says **Trap**.
 
 ## Downloads
 
@@ -42,15 +42,15 @@ below always point at the newest build:
 
 | file | what it is |
 |---|---|
-| [`app-debug.apk`](https://github.com/maceip/plugtalk/releases/latest/download/app-debug.apk) | the debug APK of the newest build (arm64-v8a, API 29 and later) |
-| [`LGPL-3.0.txt`](https://github.com/maceip/plugtalk/releases/latest/download/LGPL-3.0.txt) | the licence of the CEF engine, with the GPL-3.0 that it incorporates |
-| [`GPL-3.0.txt`](https://github.com/maceip/plugtalk/releases/latest/download/GPL-3.0.txt) | the GNU GPL on its own |
-| [`LGPL-2.1.txt`](https://github.com/maceip/plugtalk/releases/latest/download/LGPL-2.1.txt) | the licence of sequoia-openpgp |
-| [`CEFRIUM-NOTICE.txt`](https://github.com/maceip/plugtalk/releases/latest/download/CEFRIUM-NOTICE.txt) | the notice of the engine, with the licences of the Chromium sources |
-| [`SHA256SUMS.txt`](https://github.com/maceip/plugtalk/releases/latest/download/SHA256SUMS.txt) | the checksums of the licence documents |
+| [`app-debug.apk`](https://github.com/maceip/trap/releases/latest/download/app-debug.apk) | the debug APK of the newest build (arm64-v8a, API 29 and later) |
+| [`LGPL-3.0.txt`](https://github.com/maceip/trap/releases/latest/download/LGPL-3.0.txt) | the licence of the CEF engine, with the GPL-3.0 that it incorporates |
+| [`GPL-3.0.txt`](https://github.com/maceip/trap/releases/latest/download/GPL-3.0.txt) | the GNU GPL on its own |
+| [`LGPL-2.1.txt`](https://github.com/maceip/trap/releases/latest/download/LGPL-2.1.txt) | the licence of sequoia-openpgp |
+| [`CEFRIUM-NOTICE.txt`](https://github.com/maceip/trap/releases/latest/download/CEFRIUM-NOTICE.txt) | the notice of the engine, with the licences of the Chromium sources |
+| [`SHA256SUMS.txt`](https://github.com/maceip/trap/releases/latest/download/SHA256SUMS.txt) | the checksums of the licence documents |
 
 The list of every release is at
-<https://github.com/maceip/plugtalk/releases>; the checksum of the APK is
+<https://github.com/maceip/trap/releases>; the checksum of the APK is
 written into the notes of each release.
 
 The licences are inside the APK as well, under `assets/licenses/`, where the
@@ -115,7 +115,7 @@ whether a form sends the right text:
   live value of a control that the user has **not** typed into.  A control
   with a dirty value keeps the text of the user, and a form would post it.
 
-PlugTalk therefore writes a field in three steps and never trusts the
+Trap therefore writes a field in three steps and never trusts the
 write:
 
 1. the value is written — the `value` attribute of a control, the text node of
@@ -133,7 +133,7 @@ holds the old text would send it, and the user has to know.
 ## The snapshot back stack
 
 A hidden service takes seconds to answer, sometimes minutes.  A back stack
-that asks the network for every step is unusable, so PlugTalk keeps the
+that asks the network for every step is unusable, so Trap keeps the
 pages it has already seen.
 
 `OnionBackStackManager` (Kotlin) holds at most **12** entries.  Each entry
@@ -162,7 +162,7 @@ shown instantly, the real page is fetched in the background.
 The manifest sets `android:enableOnBackInvokedCallback="true"`, so the
 predictive back gesture is handed to the application instead of the system.
 
-## The identity of PlugTalk
+## The identity of Trap
 
 The launcher icon and the whole interface are painted with the artwork of
 the application: a smiling onion on a badge that fades from teal at the top
@@ -182,7 +182,7 @@ every density) and as the adaptive icon: the background is the gradient of
 the badge, the foreground is the onion of the artwork, and the monochrome
 layer is its silhouette for the themed icons.
 
-Every lockup comes out of one script, `design/icons/plugtalk_icon.py`, which
+Every lockup comes out of one script, `design/icons/trap_icon.py`, which
 cuts the onion out of the artwork of the badge and composes it on the palette
 of the brand; the store icon of the listing and the wordmark of the
 documentation come out of the same run.  The rendering is reproducible, and
@@ -280,7 +280,7 @@ are patched copies that
   `CEF_ANDROID_ROOT` (or `CEF_PATH`).
 
 CEF itself publishes binary distributions for Windows, Linux and macOS only;
-there is no official Android build.  The engine for PlugTalk comes from
+there is no official Android build.  The engine for Trap comes from
 [Cefrium](https://codeberg.org/cefrium/cef-android), the port of CEF to
 `aarch64-linux-android`; its release 0.19.0 is built on Chromium
 156.0.8078.80, the same Chromium release that the CEF 156 bindings of this
@@ -312,7 +312,7 @@ is a shared library: it is loaded at run time and can be replaced by the
 user of the application.  The sources of Cefrium are published at
 <https://codeberg.org/cefrium/cef-android> and the notices of the engine
 travel with the release
-(`cefrium-sdk-0.19.0-NOTICE.txt`); the third party dependencies of PlugTalk
+(`cefrium-sdk-0.19.0-NOTICE.txt`); the third party dependencies of Trap
 are listed in [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
 
 The licence of the engine has to be readable by the recipient of the binary.
@@ -457,7 +457,7 @@ release never overwrites the artefact of an earlier build.
 
 The pipeline publishes the **real** APK: the second job downloads the CEF
 runtime (see [The CEF runtime](#the-cef-runtime)), links the native library of
-PlugTalk against it and fails the build if the engine, the native library or
+Trap against it and fails the build if the engine, the native library or
 the resource files are missing from the APK.
 
 The workflow needs a repository on GitHub: the project is a git repository
@@ -491,7 +491,7 @@ The sources were verified in the following way:
   is linked against the real `libcef.so` of the CEF Android distribution,
 * `gradle assembleDebug` — produces an installable APK (`dev.onionvault`,
   `minSdk 29`, `targetSdk 35`, `arm64-v8a`) that carries the engine
-  (`lib/arm64-v8a/libcef.so`), the native library of PlugTalk
+  (`lib/arm64-v8a/libcef.so`), the native library of Trap
   (`lib/arm64-v8a/libonion_vault.so`) and the resource files of Chromium
   (`assets/cef/`).
 

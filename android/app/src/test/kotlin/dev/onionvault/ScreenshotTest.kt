@@ -103,12 +103,12 @@ class ScreenshotTest {
     /**
      * The page that was fetched over Tor, when the harness points at one.
      *
-     * The environment variable `PLUGTALK_PAGE_IMAGE` holds the path of a PNG
+     * The environment variable `TRAP_PAGE_IMAGE` holds the path of a PNG
      * of a page that was fetched through the Tor client of the application;
      * without it the preview renders its own mock page.
      */
     private fun fetchedPage(): ImageBitmap? {
-        val path = System.getenv("PLUGTALK_PAGE_IMAGE") ?: return null
+        val path = System.getenv("TRAP_PAGE_IMAGE") ?: return null
         val file = File(path)
         if (!file.exists()) return null
         val bitmap = BitmapFactory.decodeFile(file.absolutePath) ?: return null

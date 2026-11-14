@@ -63,7 +63,7 @@ const TOR_PROJECT_ONION: &str = "2gzyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xy
 /// The v3 address of the DuckDuckGo onion service.
 const DUCKDUCKGO_ONION: &str = "duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagsw3ad.onion";
 
-/// The compose page of the PlugTalk browser.
+/// The compose page of the Trap browser.
 ///
 /// This is the page a hidden service serves: a text area for the plaintext
 /// and a text area that carries an armored OpenPGP message.
@@ -71,10 +71,10 @@ const COMPOSE_PAGE: &str = r#"<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>PlugTalk</title>
+    <title>Trap</title>
   </head>
   <body>
-    <h1>PlugTalk</h1>
+    <h1>Trap</h1>
     <form id="compose">
       <label for="plaintext">Message</label>
       <textarea id="plaintext" name="plaintext" rows="8" cols="64"></textarea>
@@ -402,7 +402,7 @@ fn the_compose_page_is_served_over_http() {
         .expect("the response must have a body");
     assert_eq!(body, COMPOSE_PAGE);
 
-    // The elements the compose screen of PlugTalk is built from.
+    // The elements the compose screen of Trap is built from.
     assert!(body.contains("<textarea"));
     assert!(body.contains("-----BEGIN PGP MESSAGE-----"));
     assert!(body.contains("-----END PGP MESSAGE-----"));

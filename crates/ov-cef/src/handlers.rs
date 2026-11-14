@@ -1,4 +1,4 @@
-//! The CEF handlers of PlugTalk.
+//! The CEF handlers of Trap.
 //!
 //! * [`OvClient`] is the browser process client: it owns the render handler,
 //!   the load handler and the request handler and it receives the messages
@@ -136,7 +136,7 @@ impl BrowserSlot {
 }
 
 wrap_life_span_handler! {
-    // The life span handler of PlugTalk.
+    // The life span handler of Trap.
     //
     // It stores the browser in the [`BrowserSlot`] and blocks popups: a
     // hidden service must not be able to open a second window.
@@ -177,7 +177,7 @@ wrap_life_span_handler! {
 }
 
 wrap_client! {
-    // The browser process client of PlugTalk.
+    // The browser process client of Trap.
     pub struct OvClient {
         // The bridge to the native application.
         bridge: Arc<dyn BrowserBridge>,

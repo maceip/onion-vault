@@ -9,7 +9,7 @@ import dev.onionvault.OvNative
 import org.json.JSONObject
 
 /**
- * One entry of the back stack of PlugTalk.
+ * One entry of the back stack of Trap.
  *
  * The entry keeps everything that is needed to show the page again without
  * waiting for the hidden service: the rendered frame, the state of the DOM
@@ -54,7 +54,7 @@ data class OnionBackStackEntry(
 }
 
 /**
- * The back stack of PlugTalk.
+ * The back stack of Trap.
  *
  * A hidden service is slow: a back navigation over a six hop circuit can
  * take seconds, and a page that was reached through a form POST cannot be

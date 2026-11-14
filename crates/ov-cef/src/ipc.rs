@@ -1,6 +1,6 @@
 //! The IPC between the CEF render process and the CEF browser process.
 //!
-//! PlugTalk does not use JavaScript, so the two processes talk through
+//! Trap does not use JavaScript, so the two processes talk through
 //! `CefProcessMessage`s:
 //!
 //! | message                | direction        | payload                    |

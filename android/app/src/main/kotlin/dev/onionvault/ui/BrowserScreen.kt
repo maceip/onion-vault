@@ -232,7 +232,7 @@ fun BrowserScreen(
 }
 
 /**
- * The bar with the brand of PlugTalk.
+ * The bar with the brand of Trap.
  *
  * It carries the mark of the application, the title of the page, the state
  * of the transport, the button of the key manager and the button of the
@@ -253,14 +253,14 @@ private fun BrandBar(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         OvBrandButton(
-            contentDescription = "PlugTalk",
+            contentDescription = "Trap",
             onClick = onBrand,
             size = 34.dp,
         )
         Spacer(Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = state.title.ifEmpty { "PlugTalk" },
+                text = state.title.ifEmpty { "Trap" },
                 color = OnionPalette.TextPrimary,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
@@ -291,7 +291,7 @@ private fun BrandBar(
         Spacer(Modifier.width(4.dp))
         OvIconButton(
             icon = painterResource(R.drawable.ic_ov_legal),
-            contentDescription = "The licences of PlugTalk",
+            contentDescription = "The licences of Trap",
             onClick = onLegal,
             tint = OnionPalette.AmberLight,
         )
@@ -656,13 +656,13 @@ private fun KeyManagerDialog(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Image(
-                    painter = painterResource(R.drawable.ov_plugtalk_mark),
+                    painter = painterResource(R.drawable.ov_trap_mark),
                     contentDescription = null,
                     modifier = Modifier.size(26.dp),
                 )
                 Spacer(Modifier.width(10.dp))
                 Text(
-                    text = "The keys of PlugTalk",
+                    text = "The keys of Trap",
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Bold,
                 )
@@ -691,7 +691,7 @@ private fun KeyManagerDialog(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = key.userId.ifEmpty { "the key of PlugTalk" },
+                                text = key.userId.ifEmpty { "the key of Trap" },
                                 color = OnionPalette.TextPrimary,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium,

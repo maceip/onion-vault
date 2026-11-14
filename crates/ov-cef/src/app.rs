@@ -1,7 +1,7 @@
 //! The CEF application object.
 //!
 //! The application object is the place where the command line of every CEF
-//! process is configured.  PlugTalk uses it to
+//! process is configured.  Trap uses it to
 //!
 //!   * route all traffic through the local SOCKS5 proxy,
 //!   * forbid DNS resolutions outside the tunnel,
@@ -28,7 +28,7 @@ use crate::{
 };
 
 wrap_app! {
-    // The CEF application of PlugTalk.
+    // The CEF application of Trap.
     pub struct OvApp {
         // The configuration of the engine.
         config: Arc<OvConfig>,

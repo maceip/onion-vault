@@ -1,4 +1,4 @@
-//! The native entry point of PlugTalk.
+//! The native entry point of Trap.
 //!
 //! The crate glues the four engines together:
 //!
@@ -252,7 +252,7 @@ pub fn load_url(url: &str) -> Result<()> {
     Ok(())
 }
 
-/// The JNI entry points of PlugTalk.
+/// The JNI entry points of Trap.
 /// The JNI entry points of the native library.
 ///
 /// The names of the functions are fixed by the JNI ABI.

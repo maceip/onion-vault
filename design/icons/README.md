@@ -1,13 +1,13 @@
-# The PlugTalk icon lockups
+# The Trap icon lockups
 
 The launcher icon of the application is generated from a single piece of
 artwork, so that the icon, the adaptive icon, the themed icon, the store icon
 and the wordmark lockup can never drift apart.
 
-    python3 design/icons/plugtalk_icon.py           # write the files
-    python3 design/icons/plugtalk_icon.py --check   # fail when they drifted
+    python3 design/icons/trap_icon.py           # write the files
+    python3 design/icons/trap_icon.py --check   # fail when they drifted
 
-The artwork in `src/plugtalk-onion.png` is the source: a smiling onion on a
+The artwork in `src/trap-onion.png` is the source: a smiling onion on a
 teal badge.  The script cuts the onion out of the badge, and composes it on
 the palette of the brand for every lockup.  It writes into
 `android/app/src/main/res` and into `design/icons/out`.
@@ -27,9 +27,9 @@ The script needs Pillow and NumPy, nothing else: no browser, no network.
 | adaptive foreground | `mipmap-*/ic_launcher_foreground.png` | the artwork of the adaptive icon (108dp canvas, the artwork inside the 72dp safe zone) |
 | adaptive background | `drawable/ic_launcher_background.xml` | the gradient of the badge of the artwork, as a vector |
 | themed icon | `mipmap-*/ic_launcher_monochrome.png` | the silhouette that Android 13 tints with the colours of the wallpaper |
-| the mark | `drawable-nodpi/ov_plugtalk_mark.png` | the onion alone, for the brand bar of the application |
+| the mark | `drawable-nodpi/ov_trap_mark.png` | the onion alone, for the brand bar of the application |
 | store icon | `design/icons/out/play-store-1024.png` | the icon of the app store listing (and `play-store-512.png`) |
-| wordmark | `design/icons/out/plugtalk-lockup.svg` | the icon next to the wordmark, for the about screen and for the documentation |
+| wordmark | `design/icons/out/trap-lockup.svg` | the icon next to the wordmark, for the about screen and for the documentation |
 
 ## How the onion is cut out
 
@@ -44,7 +44,7 @@ left, cyan `#16C2CF` in the middle and deep blue `#10A1D8` at the bottom
 right, the same three stops as the adaptive icon.
 
 The wordmark is set in the subset of DejaVu Sans Bold that is part of the
-repository (`fonts/PlugTalk-Bold.ttf`); it carries the glyphs of the wordmark
+repository (`fonts/Trap-Bold.ttf`); it carries the glyphs of the wordmark
 only, so that the lockup is the same on every machine and the check cannot
 drift.  The licence of the font is next to it
 (`fonts/LICENSE-DejaVu.txt`).  The vector lockup embeds the font, so it

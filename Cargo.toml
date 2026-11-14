@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.82"
 license = "Apache-2.0 OR MIT"
-description = "PlugTalk: a zero-JavaScript, Tor-routed mobile browser for Android with a hardware-backed native PGP key manager"
+description = "Trap: a zero-JavaScript, Tor-routed mobile browser for Android with a hardware-backed native PGP key manager"
 publish = false
 build = "build.rs"
 

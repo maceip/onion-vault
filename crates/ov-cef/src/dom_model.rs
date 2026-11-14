@@ -45,7 +45,7 @@ background-color: rgba(255, 179, 0, 0.08) !important;";
 /// Style of a detected PGP public key.
 pub const STYLE_PGP_PUBLIC_KEY: &str = "outline: 2px dotted #CE93D8 !important;";
 
-/// Style of a field whose content was encrypted or decrypted by PlugTalk.
+/// Style of a field whose content was encrypted or decrypted by Trap.
 pub const STYLE_VERIFIED: &str = "outline: 2px solid #00FF66 !important; \
 outline-offset: -2px !important; background-color: rgba(0, 255, 102, 0.06) !important;";
 
@@ -194,7 +194,7 @@ pub fn inline_style(kinds: &[FieldKind], focused: bool) -> &'static str {
     }
 }
 
-/// The style of a node that was changed by PlugTalk.
+/// The style of a node that was changed by Trap.
 pub fn verified_style() -> &'static str {
     STYLE_VERIFIED
 }

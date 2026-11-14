@@ -1,4 +1,4 @@
-//! The CEF integration of PlugTalk.
+//! The CEF integration of Trap.
 //!
 //! The crate implements
 //!
@@ -44,7 +44,7 @@ pub use ipc::{
 };
 pub use snapshot::{FrameSnapshot, PageSnapshot, SnapshotCollector, MAX_DEPTH};
 
-/// Browser settings of PlugTalk.
+/// Browser settings of Trap.
 ///
 /// JavaScript is switched off in *every* browser instance; the remaining
 /// switches remove the features that a hidden service could abuse to
@@ -72,7 +72,7 @@ pub fn browser_settings() -> BrowserSettings {
     }
 }
 
-/// The CEF settings of PlugTalk.
+/// The CEF settings of Trap.
 ///
 /// Windowless rendering is mandatory on Android: CEF expects a desktop
 /// windowing system (Aura) that Android does not provide.
@@ -85,7 +85,7 @@ pub fn cef_settings(
     let mut settings = Settings {
         // Off-screen rendering: CEF paints into a memory buffer.
         windowless_rendering_enabled: 1,
-        // PlugTalk runs its own Tokio runtime; CEF must not install a
+        // Trap runs its own Tokio runtime; CEF must not install a
         // message pump of its own.
         multi_threaded_message_loop: 0,
         // On Android the message loop of the platform is driven by the
@@ -169,9 +169,9 @@ pub fn build_engine(
     (app, client)
 }
 
-/// Append the PlugTalk switches to a command line.
+/// Append the Trap switches to a command line.
 ///
-/// This is used for the CEF subprocesses that PlugTalk starts itself (the
+/// This is used for the CEF subprocesses that Trap starts itself (the
 /// renderer, the GPU and the utility process are started through Android
 /// services, see `CefService.kt`).
 pub fn apply_command_line(command_line: &mut CommandLine, config: &OvConfig) {

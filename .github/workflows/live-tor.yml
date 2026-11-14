@@ -1,4 +1,4 @@
-# PlugTalk — the tests that need a live Tor network.
+# Trap — the tests that need a live Tor network.
 #
 # The hermetic test suite runs on every push (see `ci-release.yml`).  The
 # tests in this workflow start a real Arti client, bootstrap it against the
