@@ -48,13 +48,13 @@ import dev.onionvault.ui.TorBootstrapState
  */
 private object Previews {
     /** The color of the background of the hidden service page. */
-    val Page = Color(0xFF12100E)
+    val Page = Color(0xFF15181F)
 
     /** The color of the text of the hidden service page. */
-    val Text = Color(0xFFD9D2C6)
+    val Text = Color(0xFFF2EEE6)
 
     /** The color of the field of the hidden service page. */
-    val Field = Color(0xFF1B1815)
+    val Field = Color(0xFF1E222C)
 }
 
 /**
@@ -495,8 +495,9 @@ fun torTaxiState(): BrowserUiState = BrowserUiState(
 /**
  * The sixth preview: the chrome of the browser.
  *
- * The brand bar with the mark, the navigation bar with the address field and
- * the start page of the browser.
+ * The top bar with the wordmark of the brand, the dock with the tiles of the
+ * features, the address pill with the shield of the leak protection and the
+ * row of the navigation, above the start page of the browser.
  */
 @Preview(name = "6. The Browser Chrome of Trap", heightDp = 640)
 @Composable
@@ -510,8 +511,9 @@ fun BrowserChromePreview() {
 /**
  * The seventh preview: the browser after it has loaded tor.taxi.
  *
- * The address field carries the address of the page, the title of the page is
- * in the brand bar, and the transport shows that the circuit is up.
+ * The address pill carries the address of the page, the badge of the top bar
+ * shows that the transport is up, and the dock shows that the browser only
+ * reaches hidden services.
  */
 @Preview(name = "7. tor.taxi Loaded over Tor", heightDp = 640)
 @Composable

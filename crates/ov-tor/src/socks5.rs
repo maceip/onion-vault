@@ -13,7 +13,14 @@
 //! helpers [`parse_request`], [`isolation_key`], [`decide`] and
 //! [`reply_frame`]; they can be exercised without a running Tor client.
 
-use std::{net::SocketAddr, sync::Arc, time::Duration};
+use std::{
+    net::SocketAddr,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
+    time::Duration,
+};
 
 use arti_client::{DataStream, StreamPrefs};
 use thiserror::Error;
@@ -210,6 +217,11 @@ pub struct Socks5Server {
     local_addr: SocketAddr,
     shutdown: watch::Sender<bool>,
     accept_task: tokio::task::JoinHandle<()>,
+    /// The traffic policy: `true` lets the listener carry clearnet traffic.
+    ///
+    /// The flag is shared with the accept loop, so that the user can change
+    /// the policy of the browser without restarting the Tor client.
+    allow_clearnet: Arc<AtomicBool>,
 }
 
 impl Socks5Server {
@@ -228,9 +240,11 @@ impl Socks5Server {
             .map_err(|e| anyhow::anyhow!("cannot bind the SOCKS5 listener on {bind}: {e}"))?;
         let local_addr = listener.local_addr()?;
         let (shutdown, mut shutdown_rx) = watch::channel(false);
+        let allow_clearnet = Arc::new(AtomicBool::new(allow_clearnet));
 
         let accept_task = {
             let shutdown = shutdown.clone();
+            let allow_clearnet = allow_clearnet.clone();
             tokio::spawn(async move {
                 loop {
                     tokio::select! {
@@ -243,6 +257,7 @@ impl Socks5Server {
                             let Ok((stream, peer)) = accepted else { continue };
                             let isolation = isolation.clone();
                             let shutdown = shutdown.subscribe();
+                            let allow_clearnet = allow_clearnet.clone();
                             tokio::spawn(async move {
                                 if let Err(err) = handle_connection(
                                     stream,
@@ -267,12 +282,22 @@ impl Socks5Server {
             local_addr,
             shutdown,
             accept_task,
+            allow_clearnet,
         }))
     }
 
     /// The address the listener is bound to, including the ephemeral port.
     pub fn local_addr(&self) -> SocketAddr {
         self.local_addr
+    }
+
+    /// Change the traffic policy of the listener.
+    ///
+    /// In hidden service only mode the listener refuses every clearnet
+    /// destination; the flag is read when a connection is handled, so the
+    /// change takes effect for the next request.
+    pub fn set_allow_clearnet(&self, allow: bool) {
+        self.allow_clearnet.store(allow, Ordering::Relaxed);
     }
 
     /// Stop accepting new connections.
@@ -293,7 +318,7 @@ async fn handle_connection(
     mut stream: TcpStream,
     _peer: SocketAddr,
     isolation: Arc<IsolationRegistry>,
-    allow_clearnet: bool,
+    allow_clearnet: Arc<AtomicBool>,
     connect_timeout: Duration,
     mut shutdown: watch::Receiver<bool>,
 ) -> anyhow::Result<()> {
@@ -312,7 +337,7 @@ async fn handle_connection(
         }
     };
 
-    match decide(&request, allow_clearnet) {
+    match decide(&request, allow_clearnet.load(Ordering::Relaxed)) {
         Socks5Decision::Reject(REP_NOT_ALLOWED) => {
             log::warn!(
                 "refusing clearnet connection to {}:{} in hidden service only mode",

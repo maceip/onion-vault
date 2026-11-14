@@ -30,4 +30,6 @@
     <string name="authentication_failed">The confirmation failed; the key stays locked.</string>
     <string name="close">Close</string>
     <string name="cancel">Cancel</string>
+    <string name="hidden_service_only_on">Only hidden services can be reached.</string>
+    <string name="hidden_service_only_off">The browser may reach the clearnet.</string>
 </resources>

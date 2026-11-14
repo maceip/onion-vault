@@ -1,6 +1,12 @@
 //! Configuration of the CEF engine.
 
-use std::net::SocketAddr;
+use std::{
+    net::SocketAddr,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
+};
 
 /// Everything the CEF handlers need to know.
 #[derive(Clone, Debug)]
@@ -9,7 +15,10 @@ pub struct OvConfig {
     pub proxy_endpoint: SocketAddr,
     /// When `true` every clearnet request is blocked: the browser can only
     /// reach `.onion` services (hidden service only mode).
-    pub hidden_service_only: bool,
+    ///
+    /// The flag is shared with the request handlers, so that the user can
+    /// change the policy while the browser is running.
+    pub hidden_service_only: Arc<AtomicBool>,
     /// When `true` SVG resources are blocked; this shrinks the parser attack
     /// surface of a hostile hidden service.
     pub block_svg: bool,
@@ -19,13 +28,24 @@ impl Default for OvConfig {
     fn default() -> Self {
         Self {
             proxy_endpoint: SocketAddr::from(([127, 0, 0, 1], 9050)),
-            hidden_service_only: true,
+            hidden_service_only: Arc::new(AtomicBool::new(true)),
             block_svg: false,
         }
     }
 }
 
 impl OvConfig {
+    /// `true` when the browser refuses every clearnet request.
+    pub fn hidden_service_only(&self) -> bool {
+        self.hidden_service_only.load(Ordering::Relaxed)
+    }
+
+    /// Change the traffic policy of the browser.
+    pub fn set_hidden_service_only(&self, hidden_service_only: bool) {
+        self.hidden_service_only
+            .store(hidden_service_only, Ordering::Relaxed);
+    }
+
     /// The `--proxy-server` value.
     pub fn proxy_server(&self) -> String {
         format!("socks5://{}", self.proxy_endpoint)

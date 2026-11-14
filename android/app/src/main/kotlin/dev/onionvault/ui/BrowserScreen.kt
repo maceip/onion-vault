@@ -6,6 +6,8 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -22,10 +24,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -39,14 +42,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.input.ImeAction
 import dev.onionvault.R
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
@@ -54,6 +60,17 @@ import kotlinx.coroutines.withContext
 
 /**
  * The screen of the browser.
+ *
+ * The chrome is the one of the design board of Trap:
+ *
+ *   * the top bar carries the menu, the wordmark, the two onions of the brand,
+ *     the number of the tabs and the menu of the browser,
+ *   * the dock holds the tiles of the features that exist: the routing over
+ *     Tor, the leak protection, the keyring and the licences,
+ *   * the address is the pill of the board: the shield of the leak
+ *     protection, the address and the button that clears it,
+ *   * the navigation row carries the buttons of the history, the start page,
+ *     a new tab and the reload.
  *
  * The screen is driven by a pure [BrowserUiState]: the surface of the
  * off-screen rendered page is injected, so that the screen can be rendered
@@ -73,8 +90,12 @@ import kotlinx.coroutines.withContext
  * @param onForward the user tapped the forward button.
  * @param onReload the user tapped the reload button.
  * @param onNewTab the user tapped the new tab button.
+ * @param onHome the user tapped the start page.
  * @param onCreateKey the user wants a new PGP key.
  * @param onExportKey the user wants the public key of a certificate.
+ * @param onToggleRouting the user changed the traffic policy.
+ * @param onZoomIn the user wants a bigger page.
+ * @param onZoomOut the user wants a smaller page.
  * @param surface the off-screen rendered page.
  * @param previewProgress the progress of the back gesture; the previews use
  * it to show the gesture in the middle of the swipe.
@@ -97,8 +118,12 @@ fun BrowserScreen(
     onForward: () -> Unit = {},
     onReload: () -> Unit = {},
     onNewTab: () -> Unit = {},
+    onHome: () -> Unit = {},
     onCreateKey: () -> Unit = {},
     onExportKey: (String) -> Unit = {},
+    onToggleRouting: (Boolean) -> Unit = {},
+    onZoomIn: () -> Unit = {},
+    onZoomOut: () -> Unit = {},
     onLoadLegalLines: suspend (String) -> List<String> = { emptyList() },
     surface: @Composable () -> Unit = {},
     previewProgress: Float = 0f,
@@ -115,6 +140,8 @@ fun BrowserScreen(
     var keysOpen by remember { mutableStateOf(showKeyManager) }
     var legalOpen by remember { mutableStateOf(showLegalNotices) }
     var legalDocument by remember { mutableStateOf<LegalDocument?>(null) }
+    var menuOpen by remember { mutableStateOf(false) }
+    var tabsOpen by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     PredictiveBackHandler(enabled = state.canGoBack) { backFlow ->
@@ -150,25 +177,9 @@ fun BrowserScreen(
             .fillMaxSize()
             .background(OnionPalette.Surface),
     ) {
-        BrandBar(
+        TopBar(
             state = state,
-            onBrand = onNewTab,
-            onKeys = { keysOpen = true },
-            onLegal = { legalOpen = true },
-        )
-
-        NavigationBar(
-            address = address,
-            onAddressChange = { address = it },
-            onNavigate = { onNavigate(address) },
-            onBack = onBack,
-            onForward = onForward,
-            onReload = onReload,
-            onNewTab = {
-                address = ""
-                onNewTab()
-            },
-            canGoBack = state.canGoBack,
+            onMenu = { menuOpen = true },
         )
 
         Box(modifier = Modifier.weight(1f)) {
@@ -192,6 +203,34 @@ fun BrowserScreen(
             PgpFieldOverlay(state = state, onFieldAction = onFieldAction)
         }
 
+        Dock(
+            state = state,
+            onRouting = { onToggleRouting(!state.hiddenServiceOnly) },
+            onKeys = { keysOpen = true },
+            onLegal = { legalOpen = true },
+        )
+
+        AddressRow(
+            address = address,
+            onAddressChange = { address = it },
+            onNavigate = { onNavigate(address) },
+            onClear = { address = "" },
+            blocked = state.blocked,
+        )
+
+        NavigationRow(
+            canGoBack = state.canGoBack,
+            onBack = onBack,
+            onForward = onForward,
+            onHome = onHome,
+            onNewTab = {
+                address = ""
+                onNewTab()
+            },
+            onReload = onReload,
+            onMenu = { menuOpen = true },
+        )
+
         TorStatusBar(state = state)
 
         state.pgp.plaintext?.let { plaintext ->
@@ -200,6 +239,49 @@ fun BrowserScreen(
                 onInsert = { onInsertPlaintext(plaintext.nodeId) },
             )
         }
+    }
+
+    if (menuOpen) {
+        MenuSheet(
+            state = state,
+            onNewTab = {
+                menuOpen = false
+                address = ""
+                onNewTab()
+            },
+            onTabs = {
+                menuOpen = false
+                tabsOpen = true
+            },
+            onKeys = {
+                menuOpen = false
+                keysOpen = true
+            },
+            onLegal = {
+                menuOpen = false
+                legalOpen = true
+            },
+            onToggleRouting = { enabled ->
+                menuOpen = false
+                onToggleRouting(enabled)
+            },
+            onZoomIn = {
+                menuOpen = false
+                onZoomIn()
+            },
+            onZoomOut = {
+                menuOpen = false
+                onZoomOut()
+            },
+            onDismiss = { menuOpen = false },
+        )
+    }
+
+    if (tabsOpen) {
+        TabsDialog(
+            state = state,
+            onDismiss = { tabsOpen = false },
+        )
     }
 
     if (keysOpen) {
@@ -232,18 +314,18 @@ fun BrowserScreen(
 }
 
 /**
- * The bar with the brand of Trap.
+ * The top bar of the browser.
  *
- * It carries the mark of the application, the title of the page, the state
- * of the transport, the button of the key manager and the button of the
- * licences.
+ * It carries the menu, the wordmark of the brand, the two onions, the number
+ * of the tabs and the menu of the browser.
+ *
+ * @param state the state of the browser.
+ * @param onMenu the user wants the menu of the browser.
  */
 @Composable
-private fun BrandBar(
+private fun TopBar(
     state: BrowserUiState,
-    onBrand: () -> Unit,
-    onKeys: () -> Unit,
-    onLegal: () -> Unit,
+    onMenu: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -252,48 +334,21 @@ private fun BrandBar(
             .padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        OvBrandButton(
-            contentDescription = "Trap",
-            onClick = onBrand,
-            size = 34.dp,
+        OvNeonButton(
+            icon = painterResource(R.drawable.ic_neon_menu),
+            contentDescription = "The menu of Trap",
+            onClick = onMenu,
         )
         Spacer(Modifier.width(10.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = state.title.ifEmpty { "Trap" },
-                color = OnionPalette.TextPrimary,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = if (state.blocked) {
-                    "the request was blocked"
-                } else {
-                    state.status.ifEmpty { state.url }
-                },
-                color = if (state.blocked) OnionPalette.Bad else OnionPalette.TextMuted,
-                fontSize = 11.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        Spacer(Modifier.width(8.dp))
+        OvBrandMark(modifier = Modifier.weight(1f))
         TorPill(state = state)
         Spacer(Modifier.width(6.dp))
-        OvIconButton(
-            icon = painterResource(R.drawable.ic_ov_keys),
-            contentDescription = "The key manager",
-            onClick = onKeys,
-            tint = OnionPalette.Leaf,
-        )
-        Spacer(Modifier.width(4.dp))
-        OvIconButton(
-            icon = painterResource(R.drawable.ic_ov_legal),
-            contentDescription = "The licences of Trap",
-            onClick = onLegal,
-            tint = OnionPalette.AmberLight,
+        OvTabBadge(count = state.tabCount)
+        Spacer(Modifier.width(6.dp))
+        OvNeonButton(
+            icon = painterResource(R.drawable.ic_neon_dots),
+            contentDescription = "The menu of Trap",
+            onClick = onMenu,
         )
     }
 }
@@ -305,81 +360,284 @@ private fun TorPill(state: BrowserUiState) {
     OvBadge(
         text = if (tor.ready) "TOR" else "${tor.percent}%",
         accent = if (tor.ready) OnionPalette.Good else OnionPalette.Amber,
-        container = if (tor.ready) OnionPalette.Good.copy(alpha = 0.14f) else OnionPalette.Amber.copy(alpha = 0.14f),
+        container = if (tor.ready) {
+            OnionPalette.Good.copy(alpha = 0.14f)
+        } else {
+            OnionPalette.Amber.copy(alpha = 0.14f)
+        },
     )
 }
 
 /**
- * The bar with the navigation and the address.
+ * The dock of the browser.
  *
- * @param canGoBack `true` when the back button is enabled.
+ * The tiles are the ones of the board that have a real function behind them:
+ * the routing over Tor, the leak protection, the keyring and the licences.
+ * The wallet, the bookmarks, the downloads and the microphone of the board
+ * are not shown: there is no feature behind them.
+ *
+ * @param state the state of the browser.
+ * @param onRouting the user changed the traffic policy.
+ * @param onKeys the user wants the key manager.
+ * @param onLegal the user wants the licences.
  */
 @Composable
-private fun NavigationBar(
-    address: String,
-    onAddressChange: (String) -> Unit,
-    onNavigate: () -> Unit,
-    onBack: () -> Unit,
-    onForward: () -> Unit,
-    onReload: () -> Unit,
-    onNewTab: () -> Unit,
-    canGoBack: Boolean,
+private fun Dock(
+    state: BrowserUiState,
+    onRouting: () -> Unit,
+    onKeys: () -> Unit,
+    onLegal: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(OnionPalette.Surface)
-            .padding(horizontal = 8.dp, vertical = 6.dp),
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.Top,
+    ) {
+        OvNeonTile(
+            icon = painterResource(R.drawable.ic_neon_onion),
+            label = "ONION",
+            onClick = onRouting,
+            active = state.hiddenServiceOnly,
+            modifier = Modifier.width(62.dp),
+        )
+        OvNeonTile(
+            icon = painterResource(R.drawable.ic_neon_key),
+            label = "PGP",
+            onClick = onKeys,
+            modifier = Modifier.width(62.dp),
+        )
+        OvNeonTile(
+            icon = painterResource(R.drawable.ic_ov_legal),
+            label = "LICENCES",
+            onClick = onLegal,
+            modifier = Modifier.width(62.dp),
+        )
+    }
+}
+
+/**
+ * The row with the address of the page.
+ *
+ * @param address the address that is shown.
+ * @param onAddressChange the user typed in the address.
+ * @param onNavigate the user wants to go to the address.
+ * @param onClear the user cleared the address.
+ * @param blocked `true` when the last request was blocked.
+ */
+@Composable
+private fun AddressRow(
+    address: String,
+    onAddressChange: (String) -> Unit,
+    onNavigate: () -> Unit,
+    onClear: () -> Unit,
+    blocked: Boolean,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(OnionPalette.Surface)
+            .padding(horizontal = 10.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        OvIconButton(
-            icon = painterResource(R.drawable.ic_ov_back),
+        OvAddressPlate(
+            modifier = Modifier.weight(1f),
+            border = if (blocked) OnionPalette.Bad else OnionPalette.TealDeep,
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 12.dp, end = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.ic_neon_shield),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(Modifier.width(8.dp))
+                BasicTextField(
+                    value = address,
+                    onValueChange = onAddressChange,
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    textStyle = TextStyle(
+                        color = OnionPalette.TextPrimary,
+                        fontSize = 13.sp,
+                        fontFamily = FontFamily.Monospace,
+                    ),
+                    cursorBrush = SolidColor(OnionPalette.Mint),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
+                    keyboardActions = KeyboardActions(onGo = { onNavigate() }),
+                    decorationBox = { inner ->
+                        if (address.isEmpty()) {
+                            Text(
+                                text = "onion address",
+                                color = OnionPalette.TextMuted,
+                                fontSize = 13.sp,
+                                fontFamily = FontFamily.Monospace,
+                            )
+                        }
+                        inner()
+                    },
+                )
+                if (address.isNotEmpty()) {
+                    OvNeonButton(
+                        icon = painterResource(R.drawable.ic_neon_cancel),
+                        contentDescription = "Clear the address",
+                        onClick = onClear,
+                        plate = 28.dp,
+                        glyph = 16.dp,
+                        accent = OnionPalette.Pink,
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * The row with the buttons of the navigation.
+ *
+ * @param canGoBack `true` when the back button is enabled.
+ */
+@Composable
+private fun NavigationRow(
+    canGoBack: Boolean,
+    onBack: () -> Unit,
+    onForward: () -> Unit,
+    onHome: () -> Unit,
+    onNewTab: () -> Unit,
+    onReload: () -> Unit,
+    onMenu: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(OnionPalette.Surface)
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        OvNeonButton(
+            icon = painterResource(R.drawable.ic_neon_back),
             contentDescription = "Back",
             onClick = onBack,
             enabled = canGoBack,
         )
-        Spacer(Modifier.width(6.dp))
-        OvIconButton(
-            icon = painterResource(R.drawable.ic_ov_forward),
+        OvNeonButton(
+            icon = painterResource(R.drawable.ic_neon_forward),
             contentDescription = "Forward",
             onClick = onForward,
-            tint = OnionPalette.Amber,
         )
-        Spacer(Modifier.width(6.dp))
-        OvIconButton(
-            icon = painterResource(R.drawable.ic_ov_reload),
-            contentDescription = "Reload",
-            onClick = onReload,
-            tint = OnionPalette.Amber,
+        OvNeonButton(
+            icon = painterResource(R.drawable.ic_neon_home),
+            contentDescription = "The start page of Trap",
+            onClick = onHome,
         )
-        Spacer(Modifier.width(6.dp))
-        OvIconButton(
-            icon = painterResource(R.drawable.ic_ov_new_tab),
+        OvNeonButton(
+            icon = painterResource(R.drawable.ic_neon_new_tab),
             contentDescription = "New tab",
             onClick = onNewTab,
         )
-        Spacer(Modifier.width(8.dp))
-        OutlinedTextField(
-            value = address,
-            onValueChange = onAddressChange,
-            modifier = Modifier.weight(1f),
-            singleLine = true,
-            shape = RoundedCornerShape(12.dp),
-            placeholder = { Text("onion address", color = OnionPalette.TextMuted) },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = OnionPalette.Teal,
-                unfocusedBorderColor = OnionPalette.Hairline,
-                focusedContainerColor = OnionPalette.SurfaceRaised,
-                unfocusedContainerColor = OnionPalette.SurfaceRaised,
-                focusedTextColor = OnionPalette.TextPrimary,
-                unfocusedTextColor = OnionPalette.TextPrimary,
-                cursorColor = OnionPalette.Teal,
-                focusedPlaceholderColor = OnionPalette.TextMuted,
-                unfocusedPlaceholderColor = OnionPalette.TextMuted,
-            ),
+        OvNeonButton(
+            icon = painterResource(R.drawable.ic_neon_reload),
+            contentDescription = "Reload",
+            onClick = onReload,
         )
-        Spacer(Modifier.width(8.dp))
-        OvPrimaryButton(text = "Go", onClick = onNavigate)
+        OvNeonButton(
+            icon = painterResource(R.drawable.ic_neon_dots),
+            contentDescription = "The menu of Trap",
+            onClick = onMenu,
+        )
+    }
+}
+
+/**
+ * The menu of the browser.
+ *
+ * The menu is the sheet of the board: the entries that have a real function
+ * behind them.
+ *
+ * @param state the state of the browser.
+ * @param onNewTab the user wants a new tab.
+ * @param onKeys the user wants the key manager.
+ * @param onLegal the user wants the licences.
+ * @param onToggleRouting the user changed the traffic policy.
+ * @param onZoomIn the user wants a bigger page.
+ * @param onZoomOut the user wants a smaller page.
+ * @param onDismiss the user closed the menu.
+ */
+@Composable
+private fun MenuSheet(
+    state: BrowserUiState,
+    onNewTab: () -> Unit,
+    onTabs: () -> Unit,
+    onKeys: () -> Unit,
+    onLegal: () -> Unit,
+    onToggleRouting: (Boolean) -> Unit,
+    onZoomIn: () -> Unit,
+    onZoomOut: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.55f))
+            .clickable(onClick = onDismiss),
+        contentAlignment = Alignment.TopEnd,
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(top = 54.dp, end = 10.dp)
+                .width(250.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(OnionPalette.SurfaceRaised)
+                .border(1.dp, OnionPalette.TealDeep, RoundedCornerShape(16.dp))
+                .padding(vertical = 6.dp),
+        ) {
+            OvMenuRow(
+                icon = painterResource(R.drawable.ic_neon_new_tab),
+                label = "New Tab",
+                onClick = onNewTab,
+            )
+            OvMenuRow(
+                icon = painterResource(R.drawable.ic_neon_new_partial_tab),
+                label = "Tabs",
+                onClick = onTabs,
+                trailing = state.tabCount.toString(),
+            )
+            OvMenuRow(
+                icon = painterResource(R.drawable.ic_neon_key),
+                label = "PGP Keyring",
+                onClick = onKeys,
+            )
+            OvMenuRow(
+                icon = painterResource(R.drawable.ic_neon_shield),
+                label = "Security",
+                onClick = { onToggleRouting(!state.hiddenServiceOnly) },
+                trailing = if (state.hiddenServiceOnly) "hidden services only" else "clearnet allowed",
+            )
+            OvMenuRow(
+                icon = painterResource(R.drawable.ic_neon_zoom_in),
+                label = "Zoom In",
+                onClick = onZoomIn,
+                trailing = "${(state.zoomLevel * 100).toInt()}%",
+            )
+            OvMenuRow(
+                icon = painterResource(R.drawable.ic_neon_zoom_out),
+                label = "Zoom Out",
+                onClick = onZoomOut,
+            )
+            OvMenuRow(
+                icon = painterResource(R.drawable.ic_ov_legal),
+                label = "Licences",
+                onClick = onLegal,
+            )
+        }
     }
 }
 
@@ -467,7 +725,7 @@ private fun PgpFieldOverlay(
  * The chip of a PGP field.
  *
  * The colour of the chip tells what the action does: the amber encrypts, the
- * teal of the badge decrypts and the green of the leaves handles the keys.
+ * teal of the brand decrypts and the mint handles the keys.
  *
  * @param field the field the chip belongs to.
  * @param onClick the user tapped the chip.
@@ -629,6 +887,95 @@ private fun SignatureBadge(plaintext: PgpPlaintextState) {
             OnionPalette.Good.copy(alpha = 0.14f)
         } else {
             OnionPalette.Warn.copy(alpha = 0.14f)
+        },
+    )
+}
+
+/**
+ * The overview of the tabs of the browser.
+ *
+ * The browser carries one tab: the page that is open.  The overview is the
+ * sheet of the board that tells how many tabs are open and which page they
+ * show.
+ *
+ * @param state the state of the browser.
+ * @param onDismiss the user closed the overview.
+ */
+@Composable
+private fun TabsDialog(
+    state: BrowserUiState,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = OnionPalette.SurfaceRaised,
+        titleContentColor = OnionPalette.TextPrimary,
+        textContentColor = OnionPalette.TextMuted,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    painter = painterResource(R.drawable.ic_neon_new_partial_tab),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.size(26.dp),
+                )
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    text = "The tabs of Trap",
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+        },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(OnionPalette.Surface)
+                        .border(1.dp, OnionPalette.TealDeep, RoundedCornerShape(10.dp))
+                        .padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.ic_neon_new_tab),
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.size(24.dp),
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = state.title.ifEmpty { "Trap" },
+                            color = OnionPalette.TextPrimary,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            text = state.url.ifEmpty { "the start page of Trap" },
+                            color = OnionPalette.TextMuted,
+                            fontSize = 11.sp,
+                            fontFamily = FontFamily.Monospace,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    OvBadge(
+                        text = state.tabCount.toString(),
+                        accent = OnionPalette.Mint,
+                        container = OnionPalette.Teal.copy(alpha = 0.14f),
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close", color = OnionPalette.TextMuted)
+            }
         },
     )
 }

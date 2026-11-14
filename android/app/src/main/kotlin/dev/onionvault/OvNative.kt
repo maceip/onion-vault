@@ -104,6 +104,22 @@ object OvNative {
     /** Go forward in the history of the browser. */
     external fun nativeGoForward(): Boolean
 
+    /**
+     * Set the zoom level of the page.
+     *
+     * The level is the one of CEF: `0.0` is the default size and every step
+     * of `0.25` is one notch of the zoom of the browser.
+     */
+    external fun nativeSetZoom(level: Double)
+
+    /**
+     * Change the traffic policy of the browser.
+     *
+     * `true` refuses every clearnet request: only hidden services can be
+     * reached.  The change is effective at once, without a restart.
+     */
+    external fun nativeSetHiddenServiceOnly(hiddenServiceOnly: Boolean)
+
     /** Export the armored public key of a fingerprint. */
     external fun nativeExportPublicKey(fingerprint: String): String?
 

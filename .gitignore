@@ -24,3 +24,7 @@ android/app/src/main/assets/licenses/
 .idea/
 *.iml
 .vscode/
+
+# The Python cache of the icon pipelines
+__pycache__/
+*.pyc

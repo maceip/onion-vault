@@ -5,73 +5,72 @@ import androidx.compose.ui.graphics.Color
 /**
  * The colours of Trap.
  *
- * They are taken from the artwork of the application: the teal of the badge
- * is the primary colour, the amber of the skin of the onion is the secondary
- * colour, the green of the leaves is the accent.  The surfaces are a warm
- * dark, so that the amber and the teal of the controls carry.
+ * They are the seven swatches of the brand palette of the design board
+ * ("TRAP Neon Graffiti Browser Board"): the neon teal carries the browser,
+ * the pink and the mint are the accents of the controls, the amber and the
+ * cream are the warmth of the highlights and the purple is the shadow of the
+ * mural.  Every surface is a near black, so that the sliced neon glyphs of
+ * the board blend into the chrome instead of sitting on a light plate.
  */
 object OnionPalette {
 
-    /** The teal at the top left of the badge. */
-    val Teal = Color(0xFF1DE5C2)
+    /** The neon teal of the primary colour of the board. */
+    val Teal = Color(0xFF00E4C1)
 
-    /** The teal in the middle of the badge. */
-    val TealDeep = Color(0xFF16C2CF)
+    /** The deep teal below the primary colour. */
+    val TealDeep = Color(0xFF00A88F)
 
-    /** The cyan at the bottom right of the badge. */
-    val Cyan = Color(0xFF10A1D8)
+    /** The mint of the highlights of the board. */
+    val Mint = Color(0xFF67EEE1)
 
-    /** The dark cyan of the shadow under the onion. */
-    val CyanDeep = Color(0xFF0B7FB4)
+    /** The pink of the graffiti of the board. */
+    val Pink = Color(0xFFFD96C3)
 
-    /** The amber of the skin of the onion. */
-    val Amber = Color(0xFFF5A93C)
+    /** The deep pink of the shadow of the graffiti. */
+    val PinkDeep = Color(0xFFB85C8B)
 
-    /** The light amber of the highlight of the onion. */
-    val AmberLight = Color(0xFFFFD98A)
+    /** The amber of the leaves of the board. */
+    val Amber = Color(0xFFE8933E)
 
-    /** The dark amber of the shadow of the onion. */
-    val AmberDeep = Color(0xFFD9781F)
+    /** The cream of the highlights of the board. */
+    val Cream = Color(0xFFFBD4A9)
 
-    /** The green of the leaves. */
-    val Leaf = Color(0xFFA9E45F)
+    /** The purple of the mural of the board. */
+    val Purple = Color(0xFF8F55A6)
 
-    /** The blue of the second leaf. */
-    val LeafCool = Color(0xFF45C2E8)
+    /** The deep purple of the shadow of the mural. */
+    val PurpleDeep = Color(0xFF5A3568)
 
-    /** The dark brown of the outline of the artwork. */
-    val Outline = Color(0xFF3A1608)
-
-    /** The background of the application. */
-    val Surface = Color(0xFF14110E)
+    /** The near black of the background of the board. */
+    val Surface = Color(0xFF15181F)
 
     /** The background of a bar. */
-    val SurfaceRaised = Color(0xFF1E1913)
+    val SurfaceRaised = Color(0xFF1E222C)
 
     /** The background of a card, a chip or a button. */
-    val SurfaceHigh = Color(0xFF2A2219)
+    val SurfaceHigh = Color(0xFF2A2F3C)
 
     /** The line between two surfaces. */
-    val Hairline = Color(0xFF3B2F24)
+    val Hairline = Color(0xFF3A4050)
 
     /** The colour of the text. */
-    val TextPrimary = Color(0xFFF7F1E8)
+    val TextPrimary = Color(0xFFF2EEE6)
 
     /** The colour of a text that is less important. */
-    val TextMuted = Color(0xFFB3A794)
+    val TextMuted = Color(0xFFA8A2B8)
 
     /** The colour of a text on the amber of a button. */
-    val OnAmber = Color(0xFF3A1608)
+    val OnAmber = Color(0xFF2A1608)
 
     /** The colour of a text on the teal of a button. */
-    val OnTeal = Color(0xFF07302C)
+    val OnTeal = Color(0xFF04241F)
 
     /** The colour that says that something works. */
-    val Good = Color(0xFF8FD44E)
+    val Good = Color(0xFF00E4C1)
 
     /** The colour that says that something needs attention. */
-    val Warn = Color(0xFFFFB74D)
+    val Warn = Color(0xFFE8933E)
 
     /** The colour of a bad news. */
-    val Bad = Color(0xFFE8705A)
+    val Bad = Color(0xFFFD96C3)
 }

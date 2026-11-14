@@ -54,3 +54,33 @@ drift.  The licence of the font is next to it
 (`fonts/LICENSE-DejaVu.txt`).  The vector lockup embeds the font, so it
 renders the same everywhere; outline the text before it is used for anything
 that has to look exactly the same everywhere.
+
+## The neon glyphs of the chrome
+
+The interface of the browser is painted with the **TRAP Neon Graffiti
+Browser Board**, the design board of the application.  The board carries the
+icon system, the components of the chrome and the brand palette.
+
+    python3 design/icons/neon/slice_neon.py           # write the files
+    python3 design/icons/neon/slice_neon.py --check   # fail when they drifted
+
+The script cuts every glyph out of the board (`neon/trap-board.jpg`) and
+writes it into `android/app/src/main/res/drawable-nodpi/ic_neon_*.png`.  The
+alpha of a pixel is how far it is from the near black of the board, so the
+glow of the neon fades out and the dark outline of a glyph becomes the glow
+itself; the lavender of the board, the labels of the icons and the frames of
+the panels are dropped.  The rendering is byte for byte reproducible and
+`--check` compares the files of the tree with a fresh rendering, exactly like
+the pipeline of the launcher icon does.
+
+The script needs Pillow and NumPy, nothing else.
+
+| asset | what it is |
+| --- | --- |
+| `ic_neon_menu`, `ic_neon_dots` | the menu of the browser, in the top bar and in the navigation row |
+| `ic_neon_trap_logo`, `ic_neon_onion_twins` | the wordmark of the brand and the two onions of the top bar |
+| `ic_neon_back`, `ic_neon_forward`, `ic_neon_home`, `ic_neon_new_tab`, `ic_neon_reload` | the row of the navigation |
+| `ic_neon_shield`, `ic_neon_cancel` | the shield of the leak protection and the button that clears the address |
+| `ic_neon_onion`, `ic_neon_key` | the tiles of the dock: the routing over Tor and the keyring |
+| `ic_neon_zoom_in`, `ic_neon_zoom_out` | the zoom of the menu of the browser |
+| `ic_neon_new_partial_tab`, `ic_neon_autofill`, `ic_neon_sign_pgp`, `ic_neon_decrypt_pgp`, `ic_neon_mic`, `ic_neon_microphone`, `ic_neon_monero`, `ic_neon_usd`, `ic_neon_wallet`, `ic_neon_update` | the rest of the icon system of the board |

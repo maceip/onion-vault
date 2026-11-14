@@ -33,6 +33,12 @@ data class BrowserUiState(
     val keys: List<KeyInfo> = emptyList(),
     /** The licence documents that travel with the application. */
     val legalDocuments: List<LegalDocument> = emptyList(),
+    /** `true` when the browser refuses every clearnet request. */
+    val hiddenServiceOnly: Boolean = true,
+    /** The zoom level of the page; `0.0` is the default size. */
+    val zoomLevel: Float = 0f,
+    /** The number of the tabs of the browser. */
+    val tabCount: Int = 1,
 )
 
 /**

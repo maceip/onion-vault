@@ -26,6 +26,9 @@ onion-vault/
 │   ├── ov-pgp/             Sequoia based key manager, Keystore wrapped TSKs
 │   └── ov-core/            JNI entry points, ANativeWindow renderer, events
 ├── design/icons/           the icon bundle and the script that renders every icon
+│   ├── android/            the icon bundle of the artwork, byte for byte
+│   ├── neon/               the design board and the script that cuts the neon glyphs
+│   └── trap_icon.py        the pipeline of the launcher icon and of the lockups
 ├── third_party/
 │   ├── cef/                cef-rs, patched for aarch64-linux-android
 │   └── cef-dll-sys/        cef-dll-sys, patched for aarch64-linux-android
@@ -60,8 +63,8 @@ The list of every release is at
 written into the notes of each release.
 
 The licences are inside the APK as well, under `assets/licenses/`, where the
-application shows them: the button of the book in the top bar opens the
-list of the documents.
+application shows them: the tile of the licences in the dock, and its entry
+in the menu of the browser, open the list of the documents.
 
 ## Security properties
 
@@ -170,22 +173,42 @@ predictive back gesture is handed to the application instead of the system.
 
 ## The identity of Trap
 
-The launcher icon and the whole interface are painted with the artwork of
-the application: the graffiti piece of the name, in the pink and the teal of
-the shutters, with the green and the orange of the walls behind it.  The
-teal of the piece is the primary colour of the interface, the amber is the
-colour of the action and the leaf green is the colour of the keys.
+<img width="941" alt="TRAP Neon Graffiti Browser Board" src="https://github.com/user-attachments/assets/6abb9081-4752-459c-87be-b2c2ba791959" />
+
+The interface is painted with the **TRAP Neon Graffiti Browser Board** — the
+design board of the application.  The board carries the icon system, the
+components of the chrome and the brand palette; the neon glyphs of the
+chrome are cut out of the board itself by
+`design/icons/neon/slice_neon.py`, with an alpha channel, so that the
+application and the board show the very same artwork.  The rendering is
+reproducible and `--check` compares the files of the tree with a fresh
+rendering, like the pipeline of the icons does.
 
 | colour | value | where it is used |
 |---|---|---|
-| teal | `#1DE5C2` | the primary colour: the navigation, the decryption, the focus |
-| cyan | `#10A1D8` | the end of the gradient of the progress bar |
-| amber | `#F5A93C` | the secondary colour: the primary button, the forward and the reload |
-| leaf | `#A9E45F` | the accent: the keys |
-| outline | `#3A1608` | the line of the artwork, the text on the amber |
-| surface | `#14110E` | the background of the application |
+| teal | `#00E4C1` | the primary colour: the border of the plates, the routing |
+| mint | `#67EEE1` | the highlight of an active tile, the text of the tab badge |
+| pink | `#FD96C3` | the accent: the blocked request, the button that clears the address |
+| amber | `#E8933E` | the action: the primary button, the state of the transport |
+| cream | `#FBD4A9` | the warmth of the highlights |
+| purple | `#8F55A6` | the shadow of the mural |
+| near black | `#15181F` | the background of the application and of the panels |
 
-The artwork arrives as an **icon bundle**, `design/icons/android/`: the
+The chrome follows the board:
+
+| part of the board | what it is in the application |
+|---|---|
+| the top bar: menu, wordmark, two onions, tab badge, ⋮ | the same, in the same order |
+| the dock of the tiles | the tiles that have a real function behind them: the routing over Tor, the keyring and the licences |
+| the address pill: shield, address, ✕, microphone | the shield, the address and the button that clears it; the microphone is not shown, because there is no speech engine behind it |
+| the navigation row: back, forward, home, new tab, reload, ⋮ | the same, in the same order |
+| the menu of the browser | New Tab, Tabs, PGP Keyring, Security, Zoom In, Zoom Out and the licences |
+
+The wallet, the bookmarks, the downloads, the settings and the microphone of
+the board are **not** in the application: there is no feature behind them,
+and a button that does nothing is worse than a missing button.
+
+The launcher icon comes from an **icon bundle**, `design/icons/android/`: the
 piece itself, the launcher icon of every density, the three layers of the
 adaptive icon and the silhouette for the themed icons of Android 13.
 
@@ -204,18 +227,10 @@ documentation out of the same artwork.  The rendering is reproducible, and
 pipeline of the continuous integration runs it on every push, so a lockup
 that was edited by hand fails the build instead of drifting.
 
-Every control of the browser is drawn for this application, in
-`res/drawable/ic_ov_*.xml`: the chevrons of the back and the forward
-button, the circular arrow of the reload button, the window with a plus of
-the new tab button, the key with a leaf of the new key button, the key on a
-ring of the key manager, the padlocks of the encryption and the decryption,
-the arrow into a page that writes the plaintext into the page, and the page
-with the folded corner of the licences.
-
-The screen has two bars: the brand bar with the mark of the application, the
-title of the page, the state of the transport and the key manager, and the
-navigation bar with the back, the forward, the reload and the new tab
-button, the address field and the *Go* button.
+The controls of the browser that are not part of the board — the padlocks of
+the encryption and the decryption, the arrow that writes the plaintext into
+the page, the page with the folded corner of the licences and the key on a
+ring — are drawn for this application in `res/drawable/ic_ov_*.xml`.
 
 ## The user interface
 
@@ -336,7 +351,7 @@ The full text of every licence is therefore
 
   * in the [`licenses/`](licenses/) directory of this repository,
   * inside the APK, under `assets/licenses/`, where the application shows it
-    (the button of the book in the top bar),
+    (the tile of the licences in the dock),
   * and attached to every release of the project, next to the APK.
 
 The notice of the engine is 2.2 MiB and belongs to the exact build of the

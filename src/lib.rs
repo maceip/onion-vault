@@ -29,7 +29,7 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 #[cfg(target_os = "android")]
 mod jni_entry_points {
     use jni::objects::JObject;
-    use jni::sys::{jboolean, jint, jstring};
+    use jni::sys::{jboolean, jdouble, jint, jstring};
     use jni::JNIEnv;
 
     /// The JNI entry point `Java_dev_onionvault_OvNative_nativeInit`.
@@ -338,6 +338,30 @@ mod jni_entry_points {
         _this: JObject,
     ) -> jboolean {
         ov_core::jni_api::Java_dev_onionvault_OvNative_nativeGoForward(env, _this)
+    }
+
+    /// The JNI entry point `Java_dev_onionvault_OvNative_nativeSetZoom`.
+    #[no_mangle]
+    pub extern "system" fn Java_dev_onionvault_OvNative_nativeSetZoom(
+        env: JNIEnv,
+        _this: JObject,
+        level: jdouble,
+    ) {
+        ov_core::jni_api::Java_dev_onionvault_OvNative_nativeSetZoom(env, _this, level)
+    }
+
+    /// The JNI entry point `Java_dev_onionvault_OvNative_nativeSetHiddenServiceOnly`.
+    #[no_mangle]
+    pub extern "system" fn Java_dev_onionvault_OvNative_nativeSetHiddenServiceOnly(
+        env: JNIEnv,
+        _this: JObject,
+        hidden_service_only: jboolean,
+    ) {
+        ov_core::jni_api::Java_dev_onionvault_OvNative_nativeSetHiddenServiceOnly(
+            env,
+            _this,
+            hidden_service_only,
+        )
     }
 
     /// The JNI entry point `Java_dev_onionvault_OvNative_nativeListKeys`.

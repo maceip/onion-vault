@@ -97,13 +97,16 @@ jobs:
       - name: Check that the icon lockups did not drift
         # Every lockup of the application comes out of one script; the check
         # renders them again and compares them with the files of the tree, so
-        # an icon that was edited by hand fails the build.
+        # an icon that was edited by hand fails the build.  The neon glyphs
+        # of the chrome are cut out of the design board by a second script,
+        # with the same discipline.
         run: |
           set -o pipefail
-          python3 -m pip install --quiet --upgrade pillow \
+          python3 -m pip install --quiet --upgrade pillow numpy \
             || python3 -m pip install --quiet --upgrade \
-              --break-system-packages pillow
+              --break-system-packages pillow numpy
           python3 design/icons/trap_icon.py --check
+          python3 design/icons/neon/slice_neon.py --check
 
       - name: Check the formatting
         run: cargo fmt --all -- --check

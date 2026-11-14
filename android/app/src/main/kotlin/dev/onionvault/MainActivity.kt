@@ -52,6 +52,15 @@ class MainActivity : FragmentActivity(), OvBridge.Listener {
     private companion object {
         const val TAG = "Trap"
         const val STATE_URL = "url"
+
+        /** One notch of the zoom of the browser. */
+        const val ZOOM_STEP = 0.25f
+
+        /** The smallest zoom of the browser. */
+        const val MIN_ZOOM = -1.0f
+
+        /** The biggest zoom of the browser. */
+        const val MAX_ZOOM = 3.0f
     }
 
     /** The off-screen rendered page. */
@@ -111,8 +120,12 @@ class MainActivity : FragmentActivity(), OvBridge.Listener {
                 onForward = { goForward() },
                 onReload = { reloadLive() },
                 onNewTab = { newTab() },
+                onHome = { home() },
                 onCreateKey = { createKey() },
                 onExportKey = { exportKey(it) },
+                onToggleRouting = { toggleRouting(it) },
+                onZoomIn = { zoom(1) },
+                onZoomOut = { zoom(-1) },
                 onLoadLegalLines = { name -> LegalNotices.read(this, name) },
                 surface = {
                     AndroidView(
@@ -127,6 +140,9 @@ class MainActivity : FragmentActivity(), OvBridge.Listener {
 
         // The keys of the keyring are shown by the key manager.
         refreshKeys()
+
+        // The traffic policy of the browser is the one of the preferences.
+        uiState = uiState.copy(hiddenServiceOnly = hiddenServiceOnlyMode())
 
         // The first page: the start page of the application.
         val start = savedInstanceState?.getString(STATE_URL) ?: getString(R.string.start_url)
@@ -203,6 +219,50 @@ class MainActivity : FragmentActivity(), OvBridge.Listener {
     /** Open the start page in a new tab. */
     private fun newTab() {
         navigate(getString(R.string.start_url))
+    }
+
+    /** Go back to the start page of the browser. */
+    private fun home() {
+        navigate(getString(R.string.start_url))
+    }
+
+    /**
+     * Change the traffic policy of the browser.
+     *
+     * The policy is shared with the request handlers and with the SOCKS5
+     * listener of the Tor client, so the change is effective at once: the
+     * next request of the page is checked against the new policy.
+     */
+    private fun toggleRouting(hiddenServiceOnly: Boolean) {
+        OvNative.nativeSetHiddenServiceOnly(hiddenServiceOnly)
+        getPreferences(MODE_PRIVATE)
+            .edit()
+            .putBoolean("hidden_service_only", hiddenServiceOnly)
+            .apply()
+        uiState = uiState.copy(hiddenServiceOnly = hiddenServiceOnly)
+        Toast.makeText(
+            this,
+            if (hiddenServiceOnly) {
+                getString(R.string.hidden_service_only_on)
+            } else {
+                getString(R.string.hidden_service_only_off)
+            },
+            Toast.LENGTH_SHORT,
+        ).show()
+    }
+
+    /**
+     * Change the zoom of the page.
+     *
+     * The level is the one of CEF: every notch is a quarter of a step, and
+     * the level of the browser is kept between two pages.
+     *
+     * @param direction `1` zooms in, `-1` zooms out.
+     */
+    private fun zoom(direction: Int) {
+        val level = (uiState.zoomLevel + direction * ZOOM_STEP).coerceIn(MIN_ZOOM, MAX_ZOOM)
+        OvNative.nativeSetZoom(level.toDouble())
+        uiState = uiState.copy(zoomLevel = level)
     }
 
     /**

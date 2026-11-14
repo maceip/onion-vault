@@ -134,6 +134,14 @@ impl TorService {
         self.socks.local_addr()
     }
 
+    /// Change the traffic policy of the SOCKS5 listener.
+    ///
+    /// `false` refuses every clearnet destination: only hidden services can
+    /// be reached.  The change does not restart the Tor client.
+    pub fn set_allow_clearnet(&self, allow: bool) {
+        self.socks.set_allow_clearnet(allow);
+    }
+
     /// The `socks5://` proxy URL that Chromium has to be pointed at.
     pub fn proxy_url(&self) -> String {
         format!("socks5://{}", self.socks_endpoint())

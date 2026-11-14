@@ -122,7 +122,7 @@ impl Engine {
         // --- the CEF engine ----------------------------------------------------
         let config = Arc::new(OvConfig {
             proxy_endpoint: tor.socks_endpoint(),
-            hidden_service_only,
+            hidden_service_only: Arc::new(std::sync::atomic::AtomicBool::new(hidden_service_only)),
             block_svg: false,
         });
 
@@ -261,7 +261,7 @@ pub fn load_url(url: &str) -> Result<()> {
 pub mod jni_api {
     use super::*;
     use jni::objects::{JObject, JString};
-    use jni::sys::{jboolean, jint, jstring};
+    use jni::sys::{jboolean, jdouble, jint, jstring};
     use jni::JNIEnv;
 
     /// Cast the JNI environment pointer into the type of the NDK.
@@ -956,6 +956,46 @@ pub mod jni_api {
         }
         browser.go_forward();
         1
+    }
+
+    /// Set the zoom level of the browser.
+    ///
+    /// The level is the one of CEF: `0.0` is the default size, every step
+    /// of `0.25` is one notch of the zoom of the browser.
+    pub extern "system" fn Java_dev_onionvault_OvNative_nativeSetZoom(
+        _env: JNIEnv,
+        _this: JObject,
+        level: jdouble,
+    ) {
+        let Some(state) = engine() else {
+            return;
+        };
+        let Some(browser) = state.browser() else {
+            return;
+        };
+        let Some(host) = browser.host() else {
+            return;
+        };
+        host.set_zoom_level(level as f64);
+    }
+
+    /// Change the traffic policy of the browser.
+    ///
+    /// `true` blocks every clearnet request: the browser can only reach
+    /// hidden services.  The flag is shared with the request handlers and
+    /// with the SOCKS5 listener, so the change is effective at once.
+    pub extern "system" fn Java_dev_onionvault_OvNative_nativeSetHiddenServiceOnly(
+        _env: JNIEnv,
+        _this: JObject,
+        hidden_service_only: jboolean,
+    ) {
+        let Some(state) = engine() else {
+            return;
+        };
+        let hidden_service_only = hidden_service_only != 0;
+        state.config.set_hidden_service_only(hidden_service_only);
+        state.tor.set_allow_clearnet(!hidden_service_only);
+        log::info!("the traffic policy changed: hidden service only = {hidden_service_only}");
     }
 
     /// The keys of the keyring.

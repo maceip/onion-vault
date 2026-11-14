@@ -486,7 +486,7 @@ wrap_load_handler! {
                 return;
             };
             let url = dom_pgp::userfree_to_string(&frame.url());
-            let blocked = self.config.hidden_service_only && !is_allowed_url(&url);
+            let blocked = self.config.hidden_service_only() && !is_allowed_url(&url);
 
             // The page that was shown until now is complete: its snapshot is
             // handed to the native UI, which shows it in the preview of the
@@ -537,7 +537,7 @@ wrap_request_handler! {
             user_gesture: ::std::os::raw::c_int,
             is_redirect: ::std::os::raw::c_int,
         ) -> ::std::os::raw::c_int {
-            if !self.config.hidden_service_only {
+            if !self.config.hidden_service_only() {
                 return 0;
             }
             let Some(request) = request else {
@@ -587,7 +587,7 @@ wrap_resource_request_handler! {
                 );
             }
 
-            if self.config.hidden_service_only && !is_allowed_url(&url) {
+            if self.config.hidden_service_only() && !is_allowed_url(&url) {
                 log::warn!("blocked the clearnet request to {url}");
                 if let Some(callback) = callback {
                     callback.cancel();
