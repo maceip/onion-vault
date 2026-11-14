@@ -1,6 +1,6 @@
-// The Gradle build of the OnionVault Android application.
+// The Gradle build of the PlugTalk Android application.
 //
-// The native part of OnionVault is written in Rust and built with
+// The native part of PlugTalk is written in Rust and built with
 // `cargo-ndk`; the task below drives it and copies the resulting shared
 // objects into the APK.
 
@@ -27,13 +27,13 @@ android {
         versionName = "0.1.0"
 
         ndk {
-            // OnionVault ships a single ABI: the arm64 one.
+            // PlugTalk ships a single ABI: the arm64 one.
             abiFilters += listOf("arm64-v8a")
         }
 
     }
 
-    // There is no CMake project: the whole native part of OnionVault is
+    // There is no CMake project: the whole native part of PlugTalk is
     // written in Rust and built by cargo-ndk.  The C++ wrapper
     // (`libcef_dll_wrapper.a`) is not needed either: the engine of Cefrium
     // ships a `libcef.so` that carries the wrapper and exports the whole
@@ -147,7 +147,7 @@ val cefRoot: String? = System.getenv("CEF_ANDROID_ROOT")
 /** Build the Rust part of the application with cargo-ndk. */
 val cargoBuild by tasks.registering(Exec::class) {
     group = "build"
-    description = "Builds the Rust part of OnionVault with cargo-ndk."
+    description = "Builds the Rust part of PlugTalk with cargo-ndk."
 
     workingDir = rootProject.file("..")
     commandLine(

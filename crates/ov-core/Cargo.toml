@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "JNI entry point, Android event bridge and NDK surface renderer for OnionVault"
+description = "JNI entry point, Android event bridge and NDK surface renderer for PlugTalk"
 
 [dependencies]
 ov-cef = { workspace = true }

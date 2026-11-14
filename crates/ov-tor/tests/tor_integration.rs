@@ -4,7 +4,7 @@
 //!
 //!   * the handshake is answered exactly as RFC 1928 and RFC 1929 prescribe,
 //!     byte for byte on the wire,
-//!   * the traffic policy is leak proof: in strict hidden service mode a
+//!   * the traffic policy is leak proof: in hidden service only mode a
 //!     clearnet destination is refused, even when the browser asks for it
 //!     through the proxy, while a hidden service address is accepted,
 //!   * every hidden service gets its own circuit: two distinct apex
@@ -63,7 +63,7 @@ const TOR_PROJECT_ONION: &str = "2gzyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xy
 /// The v3 address of the DuckDuckGo onion service.
 const DUCKDUCKGO_ONION: &str = "duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagsw3ad.onion";
 
-/// The compose page of the OnionVault browser.
+/// The compose page of the PlugTalk browser.
 ///
 /// This is the page a hidden service serves: a text area for the plaintext
 /// and a text area that carries an armored OpenPGP message.
@@ -71,10 +71,10 @@ const COMPOSE_PAGE: &str = r#"<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>OnionVault</title>
+    <title>PlugTalk</title>
   </head>
   <body>
-    <h1>OnionVault</h1>
+    <h1>PlugTalk</h1>
     <form id="compose">
       <label for="plaintext">Message</label>
       <textarea id="plaintext" name="plaintext" rows="8" cols="64"></textarea>
@@ -402,7 +402,7 @@ fn the_compose_page_is_served_over_http() {
         .expect("the response must have a body");
     assert_eq!(body, COMPOSE_PAGE);
 
-    // The elements the compose screen of OnionVault is built from.
+    // The elements the compose screen of PlugTalk is built from.
     assert!(body.contains("<textarea"));
     assert!(body.contains("-----BEGIN PGP MESSAGE-----"));
     assert!(body.contains("-----END PGP MESSAGE-----"));
@@ -457,11 +457,11 @@ async fn the_user_password_exchange_follows_rfc_1929() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// In strict hidden service mode the front end refuses a clearnet
+/// In hidden service only mode the front end refuses a clearnet
 /// destination, so that the browser cannot leak traffic out of the tunnel.
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn a_strict_policy_refuses_a_clearnet_destination() -> anyhow::Result<()> {
-    let dir = TempDir::new("strict");
+async fn a_hidden_service_only_policy_refuses_a_clearnet_destination() -> anyhow::Result<()> {
+    let dir = TempDir::new("hidden-service-only");
     let (server, _registry) =
         start_front_end(&dir.path().join("state"), &dir.path().join("cache"), false).await?;
     let addr = server.local_addr();
@@ -489,10 +489,10 @@ async fn a_strict_policy_refuses_a_clearnet_destination() -> anyhow::Result<()> 
     Ok(())
 }
 
-/// A hidden service address is accepted by the strict policy, and the
+/// A hidden service address is accepted by the hidden service only policy, and the
 /// request is decoded exactly as RFC 1928 prescribes.
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn a_hidden_service_destination_is_accepted_by_the_strict_policy() -> anyhow::Result<()> {
+async fn a_hidden_service_destination_is_accepted() -> anyhow::Result<()> {
     let dir = TempDir::new("onion");
     let (server, _registry) =
         start_front_end(&dir.path().join("state"), &dir.path().join("cache"), false).await?;
@@ -511,7 +511,7 @@ async fn a_hidden_service_destination_is_accepted_by_the_strict_policy() -> anyh
     assert_eq!(
         decide(&decoded, false),
         Socks5Decision::Proceed,
-        "the strict policy must accept a hidden service address"
+        "the hidden service only policy must accept a hidden service address"
     );
 
     // ... so the front end dials it.  The test environment has no Tor

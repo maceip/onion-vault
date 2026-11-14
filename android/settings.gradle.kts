@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "OnionVault"
+rootProject.name = "PlugTalk"
 include(":app")

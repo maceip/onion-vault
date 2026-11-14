@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "Hardware-backed OpenPGP key manager (Sequoia) for OnionVault"
+description = "Hardware-backed OpenPGP key manager (Sequoia) for PlugTalk"
 
 [dependencies]
 anyhow = { workspace = true }

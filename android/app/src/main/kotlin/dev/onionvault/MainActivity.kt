@@ -33,7 +33,7 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
 /**
- * The user interface of OnionVault.
+ * The user interface of PlugTalk.
  *
  * The activity owns
  *
@@ -50,7 +50,7 @@ import org.json.JSONObject
 class MainActivity : FragmentActivity(), OvBridge.Listener {
 
     private companion object {
-        const val TAG = "OnionVault"
+        const val TAG = "PlugTalk"
         const val STATE_URL = "url"
     }
 
@@ -82,7 +82,7 @@ class MainActivity : FragmentActivity(), OvBridge.Listener {
         val started = OvNative.nativeInit(
             filesDir.absolutePath,
             cacheDir.absolutePath,
-            strictHiddenServiceMode(),
+            hiddenServiceOnlyMode(),
             requireUserAuthentication(),
         )
         if (!started) {
@@ -224,7 +224,7 @@ class MainActivity : FragmentActivity(), OvBridge.Listener {
     /** Generate the key and tell the user its fingerprint. */
     private fun generateKey() {
         val suffix = java.util.UUID.randomUUID().toString().take(8)
-        val fingerprint = OvNative.nativeGenerateKey("OnionVault <$suffix@example.onion>")
+        val fingerprint = OvNative.nativeGenerateKey("PlugTalk <$suffix@example.onion>")
         if (fingerprint.isNullOrEmpty()) {
             showError(getString(R.string.key_failed))
             return
@@ -246,7 +246,7 @@ class MainActivity : FragmentActivity(), OvBridge.Listener {
         }
         val clipboard = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
         clipboard.setPrimaryClip(
-            android.content.ClipData.newPlainText("OnionVault public key", armored),
+            android.content.ClipData.newPlainText("PlugTalk public key", armored),
         )
         Toast.makeText(this, getString(R.string.key_copied), Toast.LENGTH_SHORT).show()
     }
@@ -422,8 +422,8 @@ class MainActivity : FragmentActivity(), OvBridge.Listener {
     )
 
     /** `true` when the browser must refuse every clearnet request. */
-    private fun strictHiddenServiceMode(): Boolean =
-        getPreferences(MODE_PRIVATE).getBoolean("strict_hidden_service", true)
+    private fun hiddenServiceOnlyMode(): Boolean =
+        getPreferences(MODE_PRIVATE).getBoolean("hidden_service_only", true)
 
     /** `true` when the master key demands a biometric confirmation. */
     private fun requireUserAuthentication(): Boolean =

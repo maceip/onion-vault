@@ -23,7 +23,7 @@ pub mod modifiers {
     pub const META: u32 = 1 << 3;
 }
 
-/// The Android key codes that OnionVault translates.
+/// The Android key codes that PlugTalk translates.
 pub mod android_key {
     /// The back button.
     pub const BACK: i32 = 4;

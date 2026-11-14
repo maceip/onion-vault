@@ -181,7 +181,7 @@ pub fn isolation_key(host: &str, username: &str) -> String {
 
 /// Apply the traffic policy to a decoded request.
 ///
-/// In strict hidden service mode every destination that is not a hidden
+/// In hidden service only mode every destination that is not a hidden
 /// service address is refused: the browser must not be able to leak traffic
 /// outside of the tunnel.
 pub fn decide(request: &Socks5Request, allow_clearnet: bool) -> Socks5Decision {
@@ -315,7 +315,7 @@ async fn handle_connection(
     match decide(&request, allow_clearnet) {
         Socks5Decision::Reject(REP_NOT_ALLOWED) => {
             log::warn!(
-                "refusing clearnet connection to {}:{} in strict hidden service mode",
+                "refusing clearnet connection to {}:{} in hidden service only mode",
                 request.host,
                 request.port
             );

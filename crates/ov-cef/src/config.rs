@@ -8,8 +8,8 @@ pub struct OvConfig {
     /// The address of the local SOCKS5 proxy that carries the Tor traffic.
     pub proxy_endpoint: SocketAddr,
     /// When `true` every clearnet request is blocked: the browser can only
-    /// reach `.onion` services (strict hidden service mode).
-    pub strict_hidden_service: bool,
+    /// reach `.onion` services (hidden service only mode).
+    pub hidden_service_only: bool,
     /// When `true` SVG resources are blocked; this shrinks the parser attack
     /// surface of a hostile hidden service.
     pub block_svg: bool,
@@ -19,7 +19,7 @@ impl Default for OvConfig {
     fn default() -> Self {
         Self {
             proxy_endpoint: SocketAddr::from(([127, 0, 0, 1], 9050)),
-            strict_hidden_service: true,
+            hidden_service_only: true,
             block_svg: false,
         }
     }
@@ -42,7 +42,7 @@ impl OvConfig {
     }
 }
 
-/// `true` when the URL may be loaded in strict hidden service mode.
+/// `true` when the URL may be loaded in hidden service only mode.
 pub fn is_allowed_url(url: &str) -> bool {
     let lower = url.trim().to_ascii_lowercase();
 

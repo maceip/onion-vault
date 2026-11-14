@@ -20,7 +20,7 @@ pub struct TorConfig {
     /// `Socks5Server::local_addr`.
     pub socks_bind: SocketAddr,
     /// When `false` the client refuses every clearnet destination: the browser
-    /// can then only reach `.onion` services (strict hidden service mode).
+    /// can then only reach `.onion` services (hidden service only mode).
     pub allow_clearnet: bool,
     /// When `true` every `.onion` apex domain gets its own circuit.
     pub isolate_per_apex: bool,

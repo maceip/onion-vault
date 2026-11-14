@@ -2,7 +2,7 @@
 //!
 //! A hidden service is slow: a back navigation over a six hop circuit can
 //! take seconds, and a page that was reached through a form POST cannot be
-//! restored by the network stack at all.  OnionVault therefore keeps a
+//! restored by the network stack at all.  PlugTalk therefore keeps a
 //! bounded ring of snapshots: the metadata of the page, a downsampled copy of
 //! the rendered frame and the state of the PGP fields.
 //!

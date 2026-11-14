@@ -1,4 +1,4 @@
-//! OnionVault: a zero-JavaScript mobile browser for Android.
+//! PlugTalk: a zero-JavaScript mobile browser for Android.
 //!
 //! The crate is the shared library of the Android application; it is loaded
 //! by `dev.onionvault.MainActivity` and by the CEF subprocess services.
@@ -39,7 +39,7 @@ mod jni_entry_points {
         _this: JObject,
         files_dir: jstring,
         _cache_dir: jstring,
-        strict: jboolean,
+        hidden_service_only: jboolean,
         require_auth: jboolean,
     ) -> jboolean {
         ov_core::jni_api::Java_dev_onionvault_OvNative_nativeInit(
@@ -47,7 +47,7 @@ mod jni_entry_points {
             _this,
             files_dir,
             _cache_dir,
-            strict,
+            hidden_service_only,
             require_auth,
         )
     }

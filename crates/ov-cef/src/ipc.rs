@@ -1,6 +1,6 @@
 //! The IPC between the CEF render process and the CEF browser process.
 //!
-//! OnionVault does not use JavaScript, so the two processes talk through
+//! PlugTalk does not use JavaScript, so the two processes talk through
 //! `CefProcessMessage`s:
 //!
 //! | message                | direction        | payload                    |

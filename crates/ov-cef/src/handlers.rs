@@ -1,4 +1,4 @@
-//! The CEF handlers of OnionVault.
+//! The CEF handlers of PlugTalk.
 //!
 //! * [`OvClient`] is the browser process client: it owns the render handler,
 //!   the load handler and the request handler and it receives the messages
@@ -6,7 +6,7 @@
 //! * [`OvRenderHandler`] copies the off-screen rendered pixels into the
 //!   platform surface.
 //! * [`OvRequestHandler`] and [`OvResourceRequestHandler`] implement the leak
-//!   prevention: in strict hidden service mode every clearnet request is
+//!   prevention: in hidden service only mode every clearnet request is
 //!   cancelled and the identifying headers are stripped.
 
 // The callbacks of CEF have the signature that the framework dictates,
@@ -136,7 +136,7 @@ impl BrowserSlot {
 }
 
 wrap_life_span_handler! {
-    // The life span handler of OnionVault.
+    // The life span handler of PlugTalk.
     //
     // It stores the browser in the [`BrowserSlot`] and blocks popups: a
     // hidden service must not be able to open a second window.
@@ -177,7 +177,7 @@ wrap_life_span_handler! {
 }
 
 wrap_client! {
-    // The browser process client of OnionVault.
+    // The browser process client of PlugTalk.
     pub struct OvClient {
         // The bridge to the native application.
         bridge: Arc<dyn BrowserBridge>,
@@ -486,7 +486,7 @@ wrap_load_handler! {
                 return;
             };
             let url = dom_pgp::userfree_to_string(&frame.url());
-            let blocked = self.config.strict_hidden_service && !is_allowed_url(&url);
+            let blocked = self.config.hidden_service_only && !is_allowed_url(&url);
 
             // The page that was shown until now is complete: its snapshot is
             // handed to the native UI, which shows it in the preview of the
@@ -528,7 +528,7 @@ wrap_request_handler! {
             Some(self.resource_request_handler.clone())
         }
 
-        /// Block clearnet navigations in strict hidden service mode.
+        /// Block clearnet navigations in hidden service only mode.
         fn on_before_browse(
             &self,
             browser: Option<&mut Browser>,
@@ -537,7 +537,7 @@ wrap_request_handler! {
             user_gesture: ::std::os::raw::c_int,
             is_redirect: ::std::os::raw::c_int,
         ) -> ::std::os::raw::c_int {
-            if !self.config.strict_hidden_service {
+            if !self.config.hidden_service_only {
                 return 0;
             }
             let Some(request) = request else {
@@ -557,7 +557,7 @@ wrap_resource_request_handler! {
     // The resource request handler.
     //
     // It strips the identifying headers from every request and cancels the
-    // clearnet subresources in strict hidden service mode.
+    // clearnet subresources in hidden service only mode.
     pub struct OvResourceRequestHandler {
         // The configuration.
         config: Arc<OvConfig>,
@@ -587,7 +587,7 @@ wrap_resource_request_handler! {
                 );
             }
 
-            if self.config.strict_hidden_service && !is_allowed_url(&url) {
+            if self.config.hidden_service_only && !is_allowed_url(&url) {
                 log::warn!("blocked the clearnet request to {url}");
                 if let Some(callback) = callback {
                     callback.cancel();

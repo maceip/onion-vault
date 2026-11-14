@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "CEF browser/render process integration and the native DOM PGP engine for OnionVault"
+description = "CEF browser/render process integration and the native DOM PGP engine for PlugTalk"
 
 [dependencies]
 cef = { workspace = true }

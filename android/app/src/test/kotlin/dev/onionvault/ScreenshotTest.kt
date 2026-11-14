@@ -1,18 +1,27 @@
 package dev.onionvault
 
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import dev.onionvault.ui.BrowserScreen
+import dev.onionvault.ui.previews.BrowserChromePreview
 import dev.onionvault.ui.previews.LegalNoticesPreview
 import dev.onionvault.ui.previews.PgpActionChipsPreview
 import dev.onionvault.ui.previews.PgpDecryptionModalPreview
 import dev.onionvault.ui.previews.PredictiveBackPreview
 import dev.onionvault.ui.previews.TorBootstrapPreview
+import dev.onionvault.ui.previews.TorTaxiPreview
+import dev.onionvault.ui.previews.torTaxiState
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -59,6 +68,51 @@ class ScreenshotTest {
     @Test
     fun the_legal_notices_are_rendered() {
         capture("5-legal-notices") { LegalNoticesPreview() }
+    }
+
+    @Test
+    fun the_browser_chrome_is_rendered() {
+        capture("6-browser-chrome") { BrowserChromePreview() }
+    }
+
+    @Test
+    fun tor_taxi_is_rendered() {
+        // The page that was fetched over Tor is injected when the harness
+        // points at one; the continuous integration renders the mock page of
+        // the preview.
+        val page = fetchedPage()
+        if (page == null) {
+            capture("7-tor-taxi") { TorTaxiPreview() }
+        } else {
+            capture("7-tor-taxi") {
+                BrowserScreen(
+                    state = torTaxiState(),
+                    surface = {
+                        Image(
+                            bitmap = page,
+                            contentDescription = "tor.taxi",
+                            contentScale = ContentScale.FillBounds,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    },
+                )
+            }
+        }
+    }
+
+    /**
+     * The page that was fetched over Tor, when the harness points at one.
+     *
+     * The environment variable `PLUGTALK_PAGE_IMAGE` holds the path of a PNG
+     * of a page that was fetched through the Tor client of the application;
+     * without it the preview renders its own mock page.
+     */
+    private fun fetchedPage(): ImageBitmap? {
+        val path = System.getenv("PLUGTALK_PAGE_IMAGE") ?: return null
+        val file = File(path)
+        if (!file.exists()) return null
+        val bitmap = BitmapFactory.decodeFile(file.absolutePath) ?: return null
+        return bitmap.asImageBitmap()
     }
 
     /** Render a preview and write it into `build/screenshots/`. */

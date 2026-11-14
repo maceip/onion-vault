@@ -1,4 +1,4 @@
-//! The native entry point of OnionVault.
+//! The native entry point of PlugTalk.
 //!
 //! The crate glues the four engines together:
 //!
@@ -54,7 +54,7 @@ impl Engine {
     /// (the Android main thread).
     pub fn start(
         files_dir: &Path,
-        strict_hidden_service: bool,
+        hidden_service_only: bool,
         require_user_authentication: bool,
     ) -> Result<Arc<Self>> {
         let runtime = RUNTIME.get_or_init(|| {
@@ -69,7 +69,7 @@ impl Engine {
         let tor_config = ov_tor::TorConfig {
             state_dir: files_dir.join("arti_state"),
             cache_dir: files_dir.join("arti_cache"),
-            allow_clearnet: !strict_hidden_service,
+            allow_clearnet: !hidden_service_only,
             ..Default::default()
         };
         let tor = runtime
@@ -122,7 +122,7 @@ impl Engine {
         // --- the CEF engine ----------------------------------------------------
         let config = Arc::new(OvConfig {
             proxy_endpoint: tor.socks_endpoint(),
-            strict_hidden_service,
+            hidden_service_only,
             block_svg: false,
         });
 
@@ -252,7 +252,7 @@ pub fn load_url(url: &str) -> Result<()> {
     Ok(())
 }
 
-/// The JNI entry points of OnionVault.
+/// The JNI entry points of PlugTalk.
 /// The JNI entry points of the native library.
 ///
 /// The names of the functions are fixed by the JNI ABI.
@@ -291,7 +291,7 @@ pub mod jni_api {
         _this: JObject,
         files_dir: jstring,
         _cache_dir: jstring,
-        strict: jboolean,
+        hidden_service_only: jboolean,
         require_auth: jboolean,
     ) -> jboolean {
         let files_dir = match read_string(&mut env, files_dir) {
@@ -307,7 +307,7 @@ pub mod jni_api {
             Err(err) => log::error!("cannot obtain the Java VM: {err}"),
         }
 
-        match Engine::start(&files_dir, strict != 0, require_auth != 0) {
+        match Engine::start(&files_dir, hidden_service_only != 0, require_auth != 0) {
             Ok(_) => 1,
             Err(err) => {
                 log::error!("cannot start the engine: {err:#}");

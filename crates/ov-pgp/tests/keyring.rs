@@ -40,7 +40,7 @@ fn generate_export_encrypt_decrypt() -> anyhow::Result<()> {
     let keyring = Keyring::open(store, master);
 
     // The key pair is generated and stored.
-    let fingerprint = keyring.generate_keypair("OnionVault Test <test@example.invalid>")?;
+    let fingerprint = keyring.generate_keypair("PlugTalk Test <test@example.invalid>")?;
     assert_eq!(keyring.certificates()?.len(), 1);
 
     // The public key can be exported and re-imported.
@@ -49,7 +49,7 @@ fn generate_export_encrypt_decrypt() -> anyhow::Result<()> {
 
     // The message is encrypted for (and signed by) the key.
     let message = keyring.encrypt_armored(
-        "the onion vault opens",
+        "the plugtalk vault opens",
         std::slice::from_ref(&fingerprint),
         Some(&fingerprint),
     )?;
@@ -57,7 +57,7 @@ fn generate_export_encrypt_decrypt() -> anyhow::Result<()> {
 
     // The message can be decrypted again.
     let result = keyring.decrypt_armored(&message)?;
-    assert_eq!(result.plaintext, "the onion vault opens");
+    assert_eq!(result.plaintext, "the plugtalk vault opens");
     assert_eq!(result.decrypted_with.as_ref(), Some(&fingerprint));
     assert!(
         result.signatures.iter().any(|signature| signature.verified),

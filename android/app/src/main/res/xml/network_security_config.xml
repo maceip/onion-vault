@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    OnionVault talks to the network through the Tor tunnel only.  The
+    PlugTalk talks to the network through the Tor tunnel only.  The
     platform must not open a cleartext connection on its own, and the
     certificate pinning is left to the hidden services themselves.
 

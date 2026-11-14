@@ -2,6 +2,7 @@ package dev.onionvault.ui.previews
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -17,10 +19,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.onionvault.R
 import dev.onionvault.ui.BrowserScreen
 import dev.onionvault.ui.BrowserUiState
 import dev.onionvault.ui.CircuitHop
@@ -34,7 +39,7 @@ import dev.onionvault.ui.PgpPlaintextState
 import dev.onionvault.ui.TorBootstrapState
 
 /**
- * The previews of OnionVault.
+ * The previews of PlugTalk.
  *
  * Every preview renders the screen from a pure state, without a browser and
  * without the native library: the same code paths are used by the
@@ -286,7 +291,7 @@ fun PgpDecryptionModalPreview() {
                 ),
                 KeyInfo(
                     fingerprint = "A3D9071F5C2E8B40D16F7394C8E5A2B6F04D71C93",
-                    userId = "OnionVault <7f3c91a2@example.onion>",
+                    userId = "PlugTalk <7f3c91a2@example.onion>",
                     hasSecret = true,
                 ),
             ),
@@ -341,5 +346,178 @@ fun LegalNoticesPreview() {
         ),
         showLegalNotices = true,
         surface = { MockHiddenServicePage() },
+    )
+}
+
+/**
+ * A mock of the start page of the browser.
+ *
+ * The application starts on `about:blank`; the preview shows the chrome of
+ * the browser with the mark of the brand and the address of a hidden service.
+ */
+@Composable
+private fun MockStartPage() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Previews.Page)
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Spacer(Modifier.height(36.dp))
+        Image(
+            painter = painterResource(R.drawable.ov_plugtalk_mark),
+            contentDescription = "PlugTalk",
+            modifier = Modifier.size(96.dp),
+        )
+        Spacer(Modifier.height(16.dp))
+        Text(
+            text = "PlugTalk",
+            color = Previews.Text,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.SemiBold,
+        )
+        Spacer(Modifier.height(6.dp))
+        Text(
+            text = "Every request goes through Tor. JavaScript is switched off.",
+            color = Color(0xFF8A8175),
+            fontSize = 13.sp,
+        )
+    }
+}
+
+/**
+ * A mock of the page of tor.taxi.
+ *
+ * The page is plain HTML without a single line of JavaScript, which is why it
+ * is rendered by the browser of the application exactly as it is written.
+ */
+@Composable
+private fun MockTorTaxiPage() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF000000))
+            .padding(16.dp),
+    ) {
+        Text(
+            text = "tor.taxi - your ride to the darknet",
+            color = Color(0xFFFFD400),
+            fontSize = 18.sp,
+            fontFamily = FontFamily.Monospace,
+        )
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = "Click here to visit our onion address!",
+            color = Color(0xFFFFFFFF),
+            fontSize = 13.sp,
+            fontFamily = FontFamily.Monospace,
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "Links in red are experiencing prolonged downtime.",
+            color = Color(0xFFFF2222),
+            fontSize = 13.sp,
+            fontFamily = FontFamily.Monospace,
+        )
+        Spacer(Modifier.height(16.dp))
+        Text(
+            text = "Markets",
+            color = Color(0xFFFFD400),
+            fontSize = 15.sp,
+            fontFamily = FontFamily.Monospace,
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "Dark Matter - 2 3 +",
+            color = Color(0xFFFF2222),
+            fontSize = 13.sp,
+            fontFamily = FontFamily.Monospace,
+        )
+        Spacer(Modifier.height(6.dp))
+        Text(
+            text = "DrugHub",
+            color = Color(0xFFFFFFFF),
+            fontSize = 13.sp,
+            fontFamily = FontFamily.Monospace,
+        )
+        Spacer(Modifier.height(16.dp))
+        Text(
+            text = "Forums",
+            color = Color(0xFFFFD400),
+            fontSize = 15.sp,
+            fontFamily = FontFamily.Monospace,
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "Dread",
+            color = Color(0xFFFFFFFF),
+            fontSize = 13.sp,
+            fontFamily = FontFamily.Monospace,
+        )
+    }
+}
+
+/**
+ * The state of the chrome of the browser, for the preview and for the tests.
+ *
+ * The client is ready, so the badge of the transport shows that the tunnel is
+ * up.
+ */
+fun chromeState(): BrowserUiState = BrowserUiState(
+    url = "about:blank",
+    title = "PlugTalk",
+    tor = TorBootstrapState(
+        percent = 100,
+        stage = "ready",
+        ready = true,
+        isolationToken = "iso-3f7c91a2b4e08d6a",
+    ),
+)
+
+/**
+ * The state of the browser after it has loaded tor.taxi over Tor.
+ *
+ * The title is the one of the page, the transport is ready and the circuit of
+ * the page is the one of the hidden service.
+ */
+fun torTaxiState(): BrowserUiState = BrowserUiState(
+    url = "https://tor.taxi",
+    title = "tor.taxi - your ride to the darknet",
+    tor = TorBootstrapState(
+        percent = 100,
+        stage = "ready",
+        ready = true,
+        isolationToken = "iso-3f7c91a2b4e08d6a",
+    ),
+)
+
+/**
+ * The sixth preview: the chrome of the browser.
+ *
+ * The brand bar with the mark, the navigation bar with the address field and
+ * the start page of the browser.
+ */
+@Preview(name = "6. The Browser Chrome of PlugTalk", heightDp = 640)
+@Composable
+fun BrowserChromePreview() {
+    BrowserScreen(
+        state = chromeState(),
+        surface = { MockStartPage() },
+    )
+}
+
+/**
+ * The seventh preview: the browser after it has loaded tor.taxi.
+ *
+ * The address field carries the address of the page, the title of the page is
+ * in the brand bar, and the transport shows that the circuit is up.
+ */
+@Preview(name = "7. tor.taxi Loaded over Tor", heightDp = 640)
+@Composable
+fun TorTaxiPreview() {
+    BrowserScreen(
+        state = torTaxiState(),
+        surface = { MockTorTaxiPage() },
     )
 }

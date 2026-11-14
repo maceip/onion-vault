@@ -1,4 +1,4 @@
-//! Embedded Tor transport for OnionVault.
+//! Embedded Tor transport for PlugTalk.
 //!
 //! The crate owns a complete Arti client inside the application process:
 //!

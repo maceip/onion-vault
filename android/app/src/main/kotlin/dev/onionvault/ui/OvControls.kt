@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.sp
 import dev.onionvault.R
 
 /**
- * The controls of OnionVault.
+ * The controls of PlugTalk.
  *
  * Every control is painted with the colours of the artwork: the teal of the
  * badge is the primary colour, the amber of the onion is the secondary
@@ -72,7 +72,7 @@ fun OvIconButton(
     }
 }
 
-/** The icon button that carries the brand mark of OnionVault. */
+/** The icon button that carries the brand mark of PlugTalk. */
 @Composable
 fun OvBrandButton(
     contentDescription: String,
@@ -91,7 +91,7 @@ fun OvBrandButton(
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            painter = painterResource(R.drawable.ov_onion_mark),
+            painter = painterResource(R.drawable.ov_plugtalk_mark),
             contentDescription = null,
             tint = Color.Unspecified,
             modifier = Modifier.size(size * 0.86f),

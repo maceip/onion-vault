@@ -5,7 +5,7 @@
 //! client created with [`TorClient::isolated_client`] carries its own token
 //! and therefore its own circuits.
 //!
-//! OnionVault isolates per *apex domain* of a v3 hidden service address: the
+//! PlugTalk isolates per *apex domain* of a v3 hidden service address: the
 //! first 16 characters of the 56 character base32 address identify the
 //! service, everything after them is the version specific part.  Visiting two
 //! different hidden services therefore never puts them on the same circuit,

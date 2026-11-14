@@ -6,7 +6,7 @@ import android.os.IBinder
 import android.util.Log
 
 /**
- * The CEF subprocesses of OnionVault.
+ * The CEF subprocesses of PlugTalk.
  *
  * Android does not allow an application to fork a helper process: every
  * process has to be started through the ActivityManager.  CEF's Android

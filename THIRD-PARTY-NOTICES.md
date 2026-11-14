@@ -1,7 +1,7 @@
 # Third party notices
 
-OnionVault links against the following third party software. The licences
-apply to those parts, not to the code of OnionVault itself, which is dual
+PlugTalk links against the following third party software. The licences
+apply to those parts, not to the code of PlugTalk itself, which is dual
 licensed under Apache-2.0 OR MIT.
 
 ## Vendored in this repository
@@ -65,5 +65,5 @@ Chromium sources and of the libraries they are built from, is downloaded by
 the continuous integration together with the engine and is put into the APK
 next to these texts.
 
-The artwork of the launcher icon and of the interface was made for OnionVault
+The artwork of the launcher icon and of the interface was made for PlugTalk
 and is covered by the licence of this repository.

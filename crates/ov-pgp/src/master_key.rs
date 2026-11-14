@@ -1,7 +1,7 @@
 //! Wrapping of the secret key material.
 //!
 //! Transferable secret keys (TSKs) must never touch the disk in the clear.
-//! OnionVault therefore encrypts every TSK with an AES-256-GCM *master
+//! PlugTalk therefore encrypts every TSK with an AES-256-GCM *master
 //! wrapping key* before it is written into the SQLite keyring.
 //!
 //! On Android the master wrapping key lives inside the hardware backed

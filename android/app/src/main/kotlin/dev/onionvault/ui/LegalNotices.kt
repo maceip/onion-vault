@@ -63,7 +63,7 @@ fun LegalNoticesDialog(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "The licences of OnionVault",
+                    text = "The licences of PlugTalk",
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Bold,
                 )

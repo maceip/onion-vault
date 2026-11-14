@@ -15,7 +15,7 @@ object OvNative {
     external fun nativeInit(
         filesDir: String,
         cacheDir: String,
-        strict: Boolean,
+        hiddenServiceOnly: Boolean,
         requireAuth: Boolean,
     ): Boolean
 

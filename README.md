@@ -1,9 +1,9 @@
-# OnionVault
+# PlugTalk
 
-[![CI & Release](https://github.com/maceip/onion-vault/actions/workflows/ci-release.yml/badge.svg)](https://github.com/maceip/onion-vault/actions/workflows/ci-release.yml)
+[![CI & Release](https://github.com/maceip/plugtalk/actions/workflows/ci-release.yml/badge.svg)](https://github.com/maceip/plugtalk/actions/workflows/ci-release.yml)
 [![Licence](https://img.shields.io/badge/licence-Apache--2.0%20OR%20MIT-blue.svg)](LICENSE)
 
-OnionVault is an Android browser that routes every request through an
+PlugTalk is an Android browser that routes every request through an
 embedded Tor client, runs with **JavaScript switched off completely** and
 implements OpenPGP natively in Rust — no WebAssembly, no content scripts, no
 JavaScript at all.
@@ -19,12 +19,20 @@ onion-vault/
 │   ├── ov-cef/             off-screen CEF browser + native DOM PGP engine
 │   ├── ov-pgp/             Sequoia based key manager, Keystore wrapped TSKs
 │   └── ov-core/            JNI entry points, ANativeWindow renderer, events
+├── design/icons/           the artwork and the script that renders every icon
 ├── third_party/
 │   ├── cef/                cef-rs, patched for aarch64-linux-android
 │   └── cef-dll-sys/        cef-dll-sys, patched for aarch64-linux-android
 ├── src/lib.rs              the shared library that the APK packages
 └── android/                the Gradle project (Kotlin, the package `dev.onionvault`)
 ```
+
+The names of the directory, of the Cargo packages and of the Kotlin package
+`dev.onionvault` are historical, and they stay: they are the identity of the
+code.  Renaming them would break the JNI symbols, the `applicationId` of the
+APK and the path of the installed application.  Everything the user sees — the
+name of the application, the interface, the icons, the documentation and the
+releases — says **PlugTalk**.
 
 ## Downloads
 
@@ -34,15 +42,15 @@ below always point at the newest build:
 
 | file | what it is |
 |---|---|
-| [`app-debug.apk`](https://github.com/maceip/onion-vault/releases/latest/download/app-debug.apk) | the debug APK of the newest build (arm64-v8a, API 29 and later) |
-| [`LGPL-3.0.txt`](https://github.com/maceip/onion-vault/releases/latest/download/LGPL-3.0.txt) | the licence of the CEF engine, with the GPL-3.0 that it incorporates |
-| [`GPL-3.0.txt`](https://github.com/maceip/onion-vault/releases/latest/download/GPL-3.0.txt) | the GNU GPL on its own |
-| [`LGPL-2.1.txt`](https://github.com/maceip/onion-vault/releases/latest/download/LGPL-2.1.txt) | the licence of sequoia-openpgp |
-| [`CEFRIUM-NOTICE.txt`](https://github.com/maceip/onion-vault/releases/latest/download/CEFRIUM-NOTICE.txt) | the notice of the engine, with the licences of the Chromium sources |
-| [`SHA256SUMS.txt`](https://github.com/maceip/onion-vault/releases/latest/download/SHA256SUMS.txt) | the checksums of the licence documents |
+| [`app-debug.apk`](https://github.com/maceip/plugtalk/releases/latest/download/app-debug.apk) | the debug APK of the newest build (arm64-v8a, API 29 and later) |
+| [`LGPL-3.0.txt`](https://github.com/maceip/plugtalk/releases/latest/download/LGPL-3.0.txt) | the licence of the CEF engine, with the GPL-3.0 that it incorporates |
+| [`GPL-3.0.txt`](https://github.com/maceip/plugtalk/releases/latest/download/GPL-3.0.txt) | the GNU GPL on its own |
+| [`LGPL-2.1.txt`](https://github.com/maceip/plugtalk/releases/latest/download/LGPL-2.1.txt) | the licence of sequoia-openpgp |
+| [`CEFRIUM-NOTICE.txt`](https://github.com/maceip/plugtalk/releases/latest/download/CEFRIUM-NOTICE.txt) | the notice of the engine, with the licences of the Chromium sources |
+| [`SHA256SUMS.txt`](https://github.com/maceip/plugtalk/releases/latest/download/SHA256SUMS.txt) | the checksums of the licence documents |
 
 The list of every release is at
-<https://github.com/maceip/onion-vault/releases>; the checksum of the APK is
+<https://github.com/maceip/plugtalk/releases>; the checksum of the APK is
 written into the notes of each release.
 
 The licences are inside the APK as well, under `assets/licenses/`, where the
@@ -54,7 +62,7 @@ list of the documents.
 | property | how it is enforced |
 |---|---|
 | **No JavaScript** | `CefBrowserSettings.javascript = State::DISABLED` for every browser; `javascript_close_windows`, `javascript_access_clipboard` and `javascript_dom_paste` are disabled as well. `CefFrame::execute_javascript` is never called anywhere in the tree. |
-| **No clearnet leaks** | `--proxy-server=socks5://127.0.0.1:<port>`, `--host-resolver-rules=MAP * ~NOTFOUND , EXCLUDE 127.0.0.1`, `--disable-webrtc`, `--incognito`, `--disable-features=NetworkPrediction`, `--disable-http2`, `--disable-background-networking`, `--no-first-run`. In strict hidden service mode every non-`.onion` request is cancelled and the `User-Agent`, `Accept-Language` and `Referer` headers are stripped. |
+| **No clearnet leaks** | `--proxy-server=socks5://127.0.0.1:<port>`, `--host-resolver-rules=MAP * ~NOTFOUND , EXCLUDE 127.0.0.1`, `--disable-webrtc`, `--incognito`, `--disable-features=NetworkPrediction`, `--disable-http2`, `--disable-background-networking`, `--no-first-run`. In hidden service only mode every non-`.onion` request is cancelled and the `User-Agent`, `Accept-Language` and `Referer` headers are stripped. |
 | **Secret keys never touch the disk in the clear** | Transferable secret keys are encrypted with an AES-256-GCM master key that lives inside the Android `KeyStore` (`KeyGenParameterSpec`, GCM, 256 bit, optional user authentication) before they are written into the SQLite keyring. The key is unlocked by the biometric prompt of the native UI for a short moment (`setUserAuthenticationValidityDurationSeconds`), and the keyring itself is excluded from the cloud backup and from the device transfer. |
 | **The render process never sees a private key** | All cryptographic operations run in the browser process; the sandboxed renderer only receives the resulting text. |
 | **No CSS side channel** | A decrypted message is shown in a native sheet, never inside the page. The plaintext is only written into the document when the user explicitly asks for it. |
@@ -67,8 +75,8 @@ the app and nothing is shelled out to an external `tor` process.
 
 A SOCKS5 listener on `127.0.0.1:<ephemeral>` exposes the client to the CEF
 network stack; Chromium is pointed at it with `--proxy-server`.  The listener
-refuses every destination that is not a hidden service when the strict hidden
-service mode is on, and it derives the circuit of a request from the first 16
+refuses every destination that is not a hidden service when hidden service
+only mode is on, and it derives the circuit of a request from the first 16
 base32 characters of the `.onion` name, so that two hidden services never
 share a circuit.
 
@@ -107,7 +115,7 @@ whether a form sends the right text:
   live value of a control that the user has **not** typed into.  A control
   with a dirty value keeps the text of the user, and a form would post it.
 
-OnionVault therefore writes a field in three steps and never trusts the
+PlugTalk therefore writes a field in three steps and never trusts the
 write:
 
 1. the value is written — the `value` attribute of a control, the text node of
@@ -125,7 +133,7 @@ holds the old text would send it, and the user has to know.
 ## The snapshot back stack
 
 A hidden service takes seconds to answer, sometimes minutes.  A back stack
-that asks the network for every step is unusable, so OnionVault keeps the
+that asks the network for every step is unusable, so PlugTalk keeps the
 pages it has already seen.
 
 `OnionBackStackManager` (Kotlin) holds at most **12** entries.  Each entry
@@ -154,10 +162,10 @@ shown instantly, the real page is fetched in the background.
 The manifest sets `android:enableOnBackInvokedCallback="true"`, so the
 predictive back gesture is handed to the application instead of the system.
 
-## The identity of OnionVault
+## The identity of PlugTalk
 
 The launcher icon and the whole interface are painted with the artwork of
-the application: a cartoon onion on a badge that fades from teal at the top
+the application: a smiling onion on a badge that fades from teal at the top
 left to cyan at the bottom right.
 
 | colour | value | where it is used |
@@ -174,13 +182,21 @@ every density) and as the adaptive icon: the background is the gradient of
 the badge, the foreground is the onion of the artwork, and the monochrome
 layer is its silhouette for the themed icons.
 
+Every lockup comes out of one script, `design/icons/plugtalk_icon.py`, which
+cuts the onion out of the artwork of the badge and composes it on the palette
+of the brand; the store icon of the listing and the wordmark of the
+documentation come out of the same run.  The rendering is reproducible, and
+`--check` compares the files of the tree with a fresh rendering: the pipeline
+of the continuous integration runs it on every push, so a lockup that was
+edited by hand fails the build instead of drifting.
+
 Every control of the browser is drawn for this application, in
 `res/drawable/ic_ov_*.xml`: the chevrons of the back and the forward
 button, the circular arrow of the reload button, the window with a plus of
 the new tab button, the key with a leaf of the new key button, the key on a
-ring of the key manager, the shield of the transport, the padlocks of the
-encryption and the decryption, and the arrow into a page that writes the
-plaintext into the page.
+ring of the key manager, the padlocks of the encryption and the decryption,
+the arrow into a page that writes the plaintext into the page, and the page
+with the folded corner of the licences.
 
 The screen has two bars: the brand bar with the mark of the application, the
 title of the page, the state of the transport and the key manager, and the
@@ -208,8 +224,9 @@ Android Studio and on the JVM:
 | `PgpChipsPreview` | a form without JavaScript and the PGP chips on it |
 | `PredictiveBackPreview` | the back gesture at 65 % of its length |
 | `PgpKeyManagerPreview` | the key manager and the decryption dialog |
+| `LegalNoticesPreview` | the licences that travel with the engine |
 
-`OnionVaultPreviewsTest` renders all four previews with Robolectric, which
+`OnionVaultPreviewsTest` renders all five previews with Robolectric, which
 runs the real Compose runtime on the JVM; the continuous integration runs it
 on every push.
 
@@ -263,7 +280,7 @@ are patched copies that
   `CEF_ANDROID_ROOT` (or `CEF_PATH`).
 
 CEF itself publishes binary distributions for Windows, Linux and macOS only;
-there is no official Android build.  The engine for OnionVault comes from
+there is no official Android build.  The engine for PlugTalk comes from
 [Cefrium](https://codeberg.org/cefrium/cef-android), the port of CEF to
 `aarch64-linux-android`; its release 0.19.0 is built on Chromium
 156.0.8078.80, the same Chromium release that the CEF 156 bindings of this
@@ -295,7 +312,7 @@ is a shared library: it is loaded at run time and can be replaced by the
 user of the application.  The sources of Cefrium are published at
 <https://codeberg.org/cefrium/cef-android> and the notices of the engine
 travel with the release
-(`cefrium-sdk-0.19.0-NOTICE.txt`); the third party dependencies of OnionVault
+(`cefrium-sdk-0.19.0-NOTICE.txt`); the third party dependencies of PlugTalk
 are listed in [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
 
 The licence of the engine has to be readable by the recipient of the binary.
@@ -370,7 +387,7 @@ cargo test --workspace
 | `ui/BrowserScreen.kt` | the screen, the predictive back gesture, the PGP chips and the Tor circuit display |
 | `ui/BrowserUiState.kt` | the immutable state of the screen |
 | `ui/OnionBackStackManager.kt` | the snapshot back stack (12 entries) and the parsing of the field positions |
-| `ui/previews/OnionVaultPreviews.kt` | the four previews of the screen |
+| `ui/previews/OnionVaultPreviews.kt` | the seven previews of the screen |
 | `OvSurfaceView.kt` | the `SurfaceView` that shows the off-screen rendered page and forwards the touch, key and IME events |
 | `CefService.kt` | the CEF subprocesses (renderer, GPU, utility) — Android starts them as services |
 | `CefResources.kt` | unpacks the CEF resource files from the assets |
@@ -396,7 +413,7 @@ the browser process carries.
 cargo test --workspace
 ```
 
-* `ov-tor`: the `.onion` apex isolation, the SOCKS5 handshake and the strict
+* `ov-tor`: the `.onion` apex isolation, the SOCKS5 handshake and the hidden service only
   mode of the local proxy,
 * `ov-pgp`: generate → export → encrypt → decrypt → verify (including the
   check that the database never contains an armored private key),
@@ -440,7 +457,7 @@ release never overwrites the artefact of an earlier build.
 
 The pipeline publishes the **real** APK: the second job downloads the CEF
 runtime (see [The CEF runtime](#the-cef-runtime)), links the native library of
-OnionVault against it and fails the build if the engine, the native library or
+PlugTalk against it and fails the build if the engine, the native library or
 the resource files are missing from the APK.
 
 The workflow needs a repository on GitHub: the project is a git repository
@@ -474,7 +491,7 @@ The sources were verified in the following way:
   is linked against the real `libcef.so` of the CEF Android distribution,
 * `gradle assembleDebug` — produces an installable APK (`dev.onionvault`,
   `minSdk 29`, `targetSdk 35`, `arm64-v8a`) that carries the engine
-  (`lib/arm64-v8a/libcef.so`), the native library of OnionVault
+  (`lib/arm64-v8a/libcef.so`), the native library of PlugTalk
   (`lib/arm64-v8a/libonion_vault.so`) and the resource files of Chromium
   (`assets/cef/`).
 

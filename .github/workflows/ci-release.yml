@@ -1,4 +1,4 @@
-# OnionVault — continuous integration and release pipeline.
+# PlugTalk — continuous integration and release pipeline.
 #
 # Every push to *any* branch (and every manual run) executes the whole
 # pipeline:
@@ -15,7 +15,7 @@
 # The `android-build` job builds the *real* APK: it downloads the CEF runtime
 # for Android (Cefrium, the port of CEF to `aarch64-linux-android`, built on
 # the same Chromium release as the CEF 156 bindings of this project), links
-# the native library of OnionVault against it and packages the engine into
+# the native library of PlugTalk against it and packages the engine into
 # the APK.
 #
 # The C++ wrapper (`libcef_dll_wrapper.a`) is not needed: the distribution
@@ -93,6 +93,17 @@ jobs:
           key: cargo-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             cargo-${{ runner.os }}-
+
+      - name: Check that the icon lockups did not drift
+        # Every lockup of the application comes out of one script; the check
+        # renders them again and compares them with the files of the tree, so
+        # an icon that was edited by hand fails the build.
+        run: |
+          set -o pipefail
+          python3 -m pip install --quiet --upgrade pillow numpy \
+            || python3 -m pip install --quiet --upgrade \
+              --break-system-packages pillow numpy
+          python3 design/icons/plugtalk_icon.py --check
 
       - name: Check the formatting
         run: cargo fmt --all -- --check
@@ -337,7 +348,7 @@ jobs:
       - name: Upload the debug APK
         uses: actions/upload-artifact@v6
         with:
-          name: onionvault-debug-apk
+          name: plugtalk-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
@@ -348,7 +359,7 @@ jobs:
         # of the APK as well.
         uses: actions/upload-artifact@v6
         with:
-          name: onionvault-legal-notices
+          name: plugtalk-legal-notices
           path: android/app/src/main/assets/licenses/
           if-no-files-found: error
           retention-days: 14
@@ -380,13 +391,13 @@ jobs:
       - name: Download the debug APK artifact
         uses: actions/download-artifact@v8
         with:
-          name: onionvault-debug-apk
+          name: plugtalk-debug-apk
           path: dist
 
       - name: Download the licence documents artifact
         uses: actions/download-artifact@v8
         with:
-          name: onionvault-legal-notices
+          name: plugtalk-legal-notices
           path: dist-legal
 
       - name: Compute the SHA-256 checksum of the APK
@@ -395,7 +406,7 @@ jobs:
           set -euo pipefail
           apk_path="$(find dist -type f -name '*.apk' -print -quit)"
           if [ -z "${apk_path}" ]; then
-            echo "::error::No APK found in the onionvault-debug-apk artifact"
+            echo "::error::No APK found in the plugtalk-debug-apk artifact"
             exit 1
           fi
           sha256="$(sha256sum "${apk_path}" | cut -d' ' -f1)"
@@ -408,7 +419,7 @@ jobs:
           set -euo pipefail
           licenses="$(find dist-legal -type f -name '*.txt' | sort)"
           if [ -z "${licenses}" ]; then
-            echo "::error::No licence document found in the onionvault-legal-notices artifact"
+            echo "::error::No licence document found in the plugtalk-legal-notices artifact"
             exit 1
           fi
           # The format is the one of `sha256sum`, so that the file can be
@@ -427,13 +438,13 @@ jobs:
         run: |
           set -euo pipefail
 
-          title="OnionVault debug build ${GITHUB_RUN_NUMBER} (${GITHUB_SHA:0:7})"
+          title="PlugTalk debug build ${GITHUB_RUN_NUMBER} (${GITHUB_SHA:0:7})"
 
           # The licences of the engine travel with the binary: they are
           # attached to the release next to the APK.
           licenses="$(find dist-legal -type f -name '*.txt' | sort)"
           if [ -z "${licenses}" ]; then
-            echo "::error::No licence document found in the onionvault-legal-notices artifact"
+            echo "::error::No licence document found in the plugtalk-legal-notices artifact"
             exit 1
           fi
           echo "The release carries these licences:"
@@ -465,11 +476,11 @@ jobs:
           # information.  Everything from the marker on is replaced, so an
           # update never duplicates the block.
           gh release view "${RELEASE_TAG}" --repo "${GITHUB_REPOSITORY}" --json body --jq .body > release-body.md
-          awk '/^<!-- onionvault-build-info -->$/ { exit } { print }' release-body.md > release-body.trimmed.md
+          awk '/^<!-- plugtalk-build-info -->$/ { exit } { print }' release-body.md > release-body.trimmed.md
           mv release-body.trimmed.md release-body.md
           {
             echo
-            echo "<!-- onionvault-build-info -->"
+            echo "<!-- plugtalk-build-info -->"
             echo "### Build information"
             echo
             echo "| item | value |"

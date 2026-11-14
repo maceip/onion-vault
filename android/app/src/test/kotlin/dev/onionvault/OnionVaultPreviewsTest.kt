@@ -2,11 +2,13 @@ package dev.onionvault
 
 import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.junit4.createComposeRule
+import dev.onionvault.ui.previews.BrowserChromePreview
 import dev.onionvault.ui.previews.LegalNoticesPreview
 import dev.onionvault.ui.previews.PgpActionChipsPreview
 import dev.onionvault.ui.previews.PgpDecryptionModalPreview
 import dev.onionvault.ui.previews.PredictiveBackPreview
 import dev.onionvault.ui.previews.TorBootstrapPreview
+import dev.onionvault.ui.previews.TorTaxiPreview
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -16,7 +18,7 @@ import org.robolectric.annotation.Config
 /**
  * The screenshot test of the previews.
  *
- * Every preview of OnionVault is rendered on the JVM, so that the continuous
+ * Every preview of PlugTalk is rendered on the JVM, so that the continuous
  * integration proves that the screens inflate and that the layout does not
  * break - without an emulator, without a device and without the native
  * browser.
@@ -56,6 +58,18 @@ class OnionVaultPreviewsTest {
     @Test
     fun the_legal_notices_preview_renders() {
         compose.setContent { LegalNoticesPreview() }
+        compose.onAllNodes(isRoot())[0].assertExists()
+    }
+
+    @Test
+    fun the_browser_chrome_preview_renders() {
+        compose.setContent { BrowserChromePreview() }
+        compose.onAllNodes(isRoot())[0].assertExists()
+    }
+
+    @Test
+    fun the_tor_taxi_preview_renders() {
+        compose.setContent { TorTaxiPreview() }
         compose.onAllNodes(isRoot())[0].assertExists()
     }
 }
