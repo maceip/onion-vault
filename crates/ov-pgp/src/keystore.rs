@@ -222,7 +222,7 @@ fn open_keystore<'local>(env: &mut jni::JNIEnv<'local>) -> Result<jni::objects::
         .new_string("AndroidKeyStore")
         .map_err(|e| anyhow!("cannot create the provider name: {e}"))?;
     let keystore = env
-        .call_method(
+        .call_static_method(
             &class,
             "getInstance",
             "(Ljava/lang/String;)Ljava/security/KeyStore;",
@@ -275,7 +275,7 @@ fn generate_key(env: &mut jni::JNIEnv<'_>, alias: &str, require_user_auth: bool)
         .new_string("AndroidKeyStore")
         .map_err(|e| anyhow!("cannot create the provider name: {e}"))?;
     let generator = env
-        .call_method(
+        .call_static_method(
             &generator_class,
             "getInstance",
             "(Ljava/lang/String;Ljava/lang/String;)Ljavax/crypto/KeyGenerator;",
@@ -314,7 +314,7 @@ fn generate_key(env: &mut jni::JNIEnv<'_>, alias: &str, require_user_auth: bool)
             &builder,
             "setUserAuthenticationRequired",
             "(Z)Landroid/security/keystore/KeyGenParameterSpec$Builder;",
-            &[(require_user_auth as i32).into()],
+            &[jni::objects::JValue::Bool(require_user_auth as u8)],
         )
         .map_err(|e| anyhow!("cannot configure the user authentication: {e}"))?
         .l()?;
@@ -353,7 +353,7 @@ fn generate_key(env: &mut jni::JNIEnv<'_>, alias: &str, require_user_auth: bool)
     )
     .map_err(|e| anyhow!("cannot initialise the key generator: {e}"))?;
 
-    env.call_method(&generator, "generateKey", "()Ljava/security/Key;", &[])
+    env.call_method(&generator, "generateKey", "()Ljavax/crypto/SecretKey;", &[])
         .map_err(|e| anyhow!("the AndroidKeyStore refused to generate the key: {e}"))?;
 
     Ok(())
@@ -392,7 +392,7 @@ fn new_cipher<'local>(env: &mut jni::JNIEnv<'local>) -> Result<jni::objects::JOb
         .new_string("AES/GCM/NoPadding")
         .map_err(|e| anyhow!("cannot create the transformation name: {e}"))?;
     let cipher = env
-        .call_method(
+        .call_static_method(
             &class,
             "getInstance",
             "(Ljava/lang/String;)Ljavax/crypto/Cipher;",

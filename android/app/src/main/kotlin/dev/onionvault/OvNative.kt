@@ -11,6 +11,13 @@ import android.view.Surface
  */
 object OvNative {
 
+    init {
+        // libcef.so carries the CEF runtime that libonion_vault.so links
+        // against; load it first, then the engine with the JNI entry points.
+        System.loadLibrary("cef")
+        System.loadLibrary("onion_vault")
+    }
+
     /** Start the engine: Tor, the key manager and the off-screen browser. */
     external fun nativeInit(
         filesDir: String,
