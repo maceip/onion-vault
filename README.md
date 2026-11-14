@@ -23,7 +23,7 @@ onion-vault/
 │   ├── cef/                cef-rs, patched for aarch64-linux-android
 │   └── cef-dll-sys/        cef-dll-sys, patched for aarch64-linux-android
 ├── src/lib.rs              the shared library that the APK packages
-└── android/                the Gradle project (Kotlin, package `dev.onionvault`)
+└── android/                the Gradle project (Kotlin, the package `dev.onionvault`)
 ```
 
 ## Downloads
