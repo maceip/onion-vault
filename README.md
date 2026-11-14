@@ -1,3 +1,9 @@
+<p align="center">
+  <a href="https://github.com/maceip/trap/releases/latest">
+    <img src="design/icons/out/play-store-512.png" width="320" alt="Trap — the icon of the application" />
+  </a>
+</p>
+
 # Trap
 
 [![CI & Release](https://github.com/maceip/trap/actions/workflows/ci-release.yml/badge.svg)](https://github.com/maceip/trap/actions/workflows/ci-release.yml)
@@ -19,7 +25,7 @@ onion-vault/
 │   ├── ov-cef/             off-screen CEF browser + native DOM PGP engine
 │   ├── ov-pgp/             Sequoia based key manager, Keystore wrapped TSKs
 │   └── ov-core/            JNI entry points, ANativeWindow renderer, events
-├── design/icons/           the artwork and the script that renders every icon
+├── design/icons/           the icon bundle and the script that renders every icon
 ├── third_party/
 │   ├── cef/                cef-rs, patched for aarch64-linux-android
 │   └── cef-dll-sys/        cef-dll-sys, patched for aarch64-linux-android
@@ -165,8 +171,10 @@ predictive back gesture is handed to the application instead of the system.
 ## The identity of Trap
 
 The launcher icon and the whole interface are painted with the artwork of
-the application: a smiling onion on a badge that fades from teal at the top
-left to cyan at the bottom right.
+the application: the graffiti piece of the name, in the pink and the teal of
+the shutters, with the green and the orange of the walls behind it.  The
+teal of the piece is the primary colour of the interface, the amber is the
+colour of the action and the leaf green is the colour of the keys.
 
 | colour | value | where it is used |
 |---|---|---|
@@ -177,18 +185,24 @@ left to cyan at the bottom right.
 | outline | `#3A1608` | the line of the artwork, the text on the amber |
 | surface | `#14110E` | the background of the application |
 
+The artwork arrives as an **icon bundle**, `design/icons/android/`: the
+piece itself, the launcher icon of every density, the three layers of the
+adaptive icon and the silhouette for the themed icons of Android 13.
+
 The icon is installed as the legacy icon (a square and a round variant for
-every density) and as the adaptive icon: the background is the gradient of
-the badge, the foreground is the onion of the artwork, and the monochrome
-layer is its silhouette for the themed icons.
+every density) and as the adaptive icon: the foreground is the artwork,
+fitted into the safe zone of the 108dp canvas so that the mask of the
+launcher never cuts a letter, the background is the black field behind it,
+and the monochrome layer is the silhouette of the piece for the themed
+icons.
 
 Every lockup comes out of one script, `design/icons/trap_icon.py`, which
-cuts the onion out of the artwork of the badge and composes it on the palette
-of the brand; the store icon of the listing and the wordmark of the
-documentation come out of the same run.  The rendering is reproducible, and
-`--check` compares the files of the tree with a fresh rendering: the pipeline
-of the continuous integration runs it on every push, so a lockup that was
-edited by hand fails the build instead of drifting.
+copies the bundle into the resources of the application and composes the
+mark of the interface, the icon of the listing and the wordmark of the
+documentation out of the same artwork.  The rendering is reproducible, and
+`--check` compares the files of the tree with a fresh rendering: the
+pipeline of the continuous integration runs it on every push, so a lockup
+that was edited by hand fails the build instead of drifting.
 
 Every control of the browser is drawn for this application, in
 `res/drawable/ic_ov_*.xml`: the chevrons of the back and the forward
@@ -221,12 +235,14 @@ Android Studio and on the JVM:
 | preview | shows |
 |---|---|
 | `TorBootstrapPreview` | the bootstrap and the circuit at 65 % |
-| `PgpChipsPreview` | a form without JavaScript and the PGP chips on it |
+| `PgpActionChipsPreview` | a form without JavaScript and the PGP chips on it |
 | `PredictiveBackPreview` | the back gesture at 65 % of its length |
-| `PgpKeyManagerPreview` | the key manager and the decryption dialog |
+| `PgpDecryptionModalPreview` | the key manager and the decryption dialog |
 | `LegalNoticesPreview` | the licences that travel with the engine |
+| `BrowserChromePreview` | the browser chrome with the mark of the application |
+| `TorTaxiPreview` | tor.taxi, fetched over the Tor client |
 
-`OnionVaultPreviewsTest` renders all five previews with Robolectric, which
+`OnionVaultPreviewsTest` renders all seven previews with Robolectric, which
 runs the real Compose runtime on the JVM; the continuous integration runs it
 on every push.
 
@@ -482,7 +498,7 @@ The sources were verified in the following way:
   the headless DOM fixture test),
 * `gradle :app:compileDebugKotlin` — clean,
 * `gradle :app:testDebugUnitTest --tests 'dev.onionvault.OnionVaultPreviewsTest'`
-  — the four previews render on the JVM,
+  — the seven previews render on the JVM,
 * `cargo test -p ov-tor -- --ignored` — the embedded Arti client bootstraps
   against the live Tor network and exposes its SOCKS5 listener, and the
   client publishes a real onion service and reads the compose page of that

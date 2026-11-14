@@ -80,12 +80,15 @@ fun OvBrandButton(
     modifier: Modifier = Modifier,
     size: Dp = 38.dp,
 ) {
+    // The mark is a rounded square, like the icon of the launcher; a circle
+    // would cut the corners of the artwork away.
+    val shape = RoundedCornerShape(percent = 28)
     Box(
         modifier = modifier
             .size(size)
-            .clip(CircleShape)
+            .clip(shape)
             .background(OnionPalette.SurfaceHigh)
-            .border(1.dp, OnionPalette.Hairline, CircleShape)
+            .border(1.dp, OnionPalette.Hairline, shape)
             .clickable(onClick = onClick)
             .semantics { this.contentDescription = contentDescription },
         contentAlignment = Alignment.Center,

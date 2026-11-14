@@ -100,9 +100,9 @@ jobs:
         # an icon that was edited by hand fails the build.
         run: |
           set -o pipefail
-          python3 -m pip install --quiet --upgrade pillow numpy \
+          python3 -m pip install --quiet --upgrade pillow \
             || python3 -m pip install --quiet --upgrade \
-              --break-system-packages pillow numpy
+              --break-system-packages pillow
           python3 design/icons/trap_icon.py --check
 
       - name: Check the formatting
