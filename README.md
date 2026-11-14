@@ -169,6 +169,7 @@ The manifest sets `android:enableOnBackInvokedCallback="true"`, so the
 predictive back gesture is handed to the application instead of the system.
 
 ## The identity of Trap
+<img width="941" alt="TRAP Neon Graffiti Browser Board" src="https://github.com/user-attachments/assets/6abb9081-4752-459c-87be-b2c2ba791959" />
 
 The launcher icon and the whole interface are painted with the artwork of
 the application: the graffiti piece of the name, in the pink and the teal of
