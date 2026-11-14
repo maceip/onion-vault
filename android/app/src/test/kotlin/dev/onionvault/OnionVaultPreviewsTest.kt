@@ -3,6 +3,7 @@ package dev.onionvault
 import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import dev.onionvault.ui.previews.BrowserChromePreview
+import dev.onionvault.ui.previews.BrowserMenuPreview
 import dev.onionvault.ui.previews.LegalNoticesPreview
 import dev.onionvault.ui.previews.PgpActionChipsPreview
 import dev.onionvault.ui.previews.PgpDecryptionModalPreview
@@ -70,6 +71,12 @@ class OnionVaultPreviewsTest {
     @Test
     fun the_tor_taxi_preview_renders() {
         compose.setContent { TorTaxiPreview() }
+        compose.onAllNodes(isRoot())[0].assertExists()
+    }
+
+    @Test
+    fun the_browser_menu_preview_renders() {
+        compose.setContent { BrowserMenuPreview() }
         compose.onAllNodes(isRoot())[0].assertExists()
     }
 }

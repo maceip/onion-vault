@@ -255,8 +255,9 @@ Android Studio and on the JVM:
 | `LegalNoticesPreview` | the licences that travel with the engine |
 | `BrowserChromePreview` | the browser chrome with the mark of the application |
 | `TorTaxiPreview` | tor.taxi, fetched over the Tor client |
+| `BrowserMenuPreview` | the menu of the browser, with the traffic policy and the zoom |
 
-`OnionVaultPreviewsTest` renders all seven previews with Robolectric, which
+`OnionVaultPreviewsTest` renders all eight previews with Robolectric, which
 runs the real Compose runtime on the JVM; the continuous integration runs it
 on every push.
 
@@ -417,7 +418,7 @@ cargo test --workspace
 | `ui/BrowserScreen.kt` | the screen, the predictive back gesture, the PGP chips and the Tor circuit display |
 | `ui/BrowserUiState.kt` | the immutable state of the screen |
 | `ui/OnionBackStackManager.kt` | the snapshot back stack (12 entries) and the parsing of the field positions |
-| `ui/previews/OnionVaultPreviews.kt` | the seven previews of the screen |
+| `ui/previews/OnionVaultPreviews.kt` | the eight previews of the screen |
 | `OvSurfaceView.kt` | the `SurfaceView` that shows the off-screen rendered page and forwards the touch, key and IME events |
 | `CefService.kt` | the CEF subprocesses (renderer, GPU, utility) — Android starts them as services |
 | `CefResources.kt` | unpacks the CEF resource files from the assets |
@@ -512,7 +513,7 @@ The sources were verified in the following way:
   the headless DOM fixture test),
 * `gradle :app:compileDebugKotlin` — clean,
 * `gradle :app:testDebugUnitTest --tests 'dev.onionvault.OnionVaultPreviewsTest'`
-  — the seven previews render on the JVM,
+  — the eight previews render on the JVM,
 * `cargo test -p ov-tor -- --ignored` — the embedded Arti client bootstraps
   against the live Tor network and exposes its SOCKS5 listener, and the
   client publishes a real onion service and reads the compose page of that

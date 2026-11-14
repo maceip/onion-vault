@@ -103,6 +103,8 @@ import kotlinx.coroutines.withContext
  * the manager of the keys.
  * @param showLegalNotices the list of the licences is open; the previews use
  * it to show the licences that travel with the application.
+ * @param showMenu the menu of the browser is open; the previews use it to
+ * show the sheet of the menu.
  * @param onLoadLegalLines the function that reads the text of a licence
  * document; it is called away from the thread of the interface.
  */
@@ -129,6 +131,7 @@ fun BrowserScreen(
     previewProgress: Float = 0f,
     showKeyManager: Boolean = false,
     showLegalNotices: Boolean = false,
+    showMenu: Boolean = false,
 ) {
     var address by remember(state.url) { mutableStateOf(state.url) }
     // The preview of the gesture starts in the state that the parameter
@@ -140,7 +143,7 @@ fun BrowserScreen(
     var keysOpen by remember { mutableStateOf(showKeyManager) }
     var legalOpen by remember { mutableStateOf(showLegalNotices) }
     var legalDocument by remember { mutableStateOf<LegalDocument?>(null) }
-    var menuOpen by remember { mutableStateOf(false) }
+    var menuOpen by remember { mutableStateOf(showMenu) }
     var tabsOpen by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
@@ -625,7 +628,7 @@ private fun MenuSheet(
                 icon = painterResource(R.drawable.ic_neon_zoom_in),
                 label = "Zoom In",
                 onClick = onZoomIn,
-                trailing = "${(state.zoomLevel * 100).toInt()}%",
+                trailing = "${zoomPercent(state.zoomLevel)}%",
             )
             OvMenuRow(
                 icon = painterResource(R.drawable.ic_neon_zoom_out),
@@ -640,6 +643,17 @@ private fun MenuSheet(
         }
     }
 }
+
+/**
+ * The zoom of the page in percent.
+ *
+ * The zoom level of CEF is the one of Chromium: the level `0.0` is the
+ * default size and every step of `0.25` is a notch of the zoom.
+ *
+ * @param level the zoom level of the browser.
+ */
+private fun zoomPercent(level: Float): Int =
+    (Math.pow(1.2, level.toDouble()) * 100.0).toInt()
 
 /**
  * The layer that shows the cached frame of the previous page.

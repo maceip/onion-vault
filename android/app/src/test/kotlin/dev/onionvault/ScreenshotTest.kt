@@ -15,6 +15,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import dev.onionvault.ui.BrowserScreen
 import dev.onionvault.ui.previews.BrowserChromePreview
+import dev.onionvault.ui.previews.BrowserMenuPreview
 import dev.onionvault.ui.previews.LegalNoticesPreview
 import dev.onionvault.ui.previews.PgpActionChipsPreview
 import dev.onionvault.ui.previews.PgpDecryptionModalPreview
@@ -73,6 +74,11 @@ class ScreenshotTest {
     @Test
     fun the_browser_chrome_is_rendered() {
         capture("6-browser-chrome") { BrowserChromePreview() }
+    }
+
+    @Test
+    fun the_browser_menu_is_rendered() {
+        capture("8-browser-menu") { BrowserMenuPreview() }
     }
 
     @Test

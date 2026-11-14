@@ -523,3 +523,20 @@ fun TorTaxiPreview() {
         surface = { MockTorTaxiPage() },
     )
 }
+
+/**
+ * The eighth preview: the menu of the browser.
+ *
+ * The sheet is the menu of the design board: the entries that have a real
+ * function behind them — the new tab, the tabs, the keyring, the traffic
+ * policy, the zoom and the licences.
+ */
+@Preview(name = "8. The Menu of Trap", heightDp = 640)
+@Composable
+fun BrowserMenuPreview() {
+    BrowserScreen(
+        state = chromeState(),
+        showMenu = true,
+        surface = { MockStartPage() },
+    )
+}
