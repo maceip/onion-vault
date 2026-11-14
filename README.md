@@ -46,7 +46,7 @@ The list of every release is at
 written into the notes of each release.
 
 The licences are inside the APK as well, under `assets/licenses/`, where the
-application shows them: the button of the book in the upper bar opens the
+application shows them: the button of the book in the top bar opens the
 list of the documents.
 
 ## Security properties
@@ -303,7 +303,7 @@ The full text of every licence is therefore
 
   * in the [`licenses/`](licenses/) directory of this repository,
   * inside the APK, under `assets/licenses/`, where the application shows it
-    (the button of the book in the upper bar),
+    (the button of the book in the top bar),
   * and attached to every release of the project, next to the APK.
 
 The notice of the engine is 2.2 MiB and belongs to the exact build of the
